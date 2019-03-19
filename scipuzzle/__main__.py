@@ -1,15 +1,32 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from Bio.PDB import *
+import sys
+import arguments
+import utils
 
-parser = PDBParser()
-structure = parser.get_structure('X', '../example_inputs/pair_his3_sc_XA.pdb')
-for model in structure:
-    for chain in model:
-        for residue in chain:
-            for atom in residue:
-                print(atom)
+# STEP 1: parse the arguments
+options = arguments.read_args()
+input_files = arguments.get_input_files(options.input)
+stoichiometry = None
+if options.stoichiometry is not None:
+    stoichiometry = arguments.parse_stoichiometry(options.stoichiometry)
+if options.verbose:
+    sys.err("Input correctly parsed.\nFiles used as input:")
+    for file in input_files:
+        sys.err(file)
 
-ppb = CaPPBuilder()
-for pp in ppb.build_peptides(structure):
-    print(pp.get_sequence())
+# STEP2: Get possible structures for Macrocomplex construction and skip others
+pairs = []
+for file in input_files:
+    pairs.append(utils.get_chains(file))
+pairs = utils.filter_pairs(pairs)
+print(pairs)
+
+
+# STEP3: Check for stoichiometry requirements
+chains = []
+if not utils.stoichiometry_is_possible(stoichiometry, chains):
+    # TODO: change with trow exception!
+    exit()
+
+# STEP4: Begin Macrocomplex reconstruction!
