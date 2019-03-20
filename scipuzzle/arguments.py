@@ -58,4 +58,7 @@ def parse_stoichiometry(stoichiometry):
 
     e.g. A3B12C1 --> {'A':3, 'B':12, 'C':1}
     """
-    return dict(re.findall("(\w)(\d*)",stoichiometry))
+    sto_dict = dict(re.findall("(\w)(\d*)",stoichiometry))
+    for key in sto_dict:
+        sto_dict[key] = int(sto_dict[key])
+    return sto_dict

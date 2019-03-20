@@ -61,7 +61,7 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
     return similar_chains
 
 
-def remove_useless_chains(chains, similar_chains):
+def remove_useless_chains(chains, similar_chains, pairs):
     """
     Removes chains from the chains list that neither have any similar chain
     among the other ones nor they are paired with one chain that has
@@ -78,11 +78,17 @@ def remove_useless_chains(chains, similar_chains):
             remove.append(chain)
     # Remove chains from similar chains and chains
     for k in remove:
+        chain_id = similar_chains[k][0]
+        for pair_list in pairs:
+            if chain_id in pair_list:
+                pair_list.remove(chain_id)
+        pairs = list(filter(None, pairs))
         del similar_chains[k]
         del chains[k]
-    return (chains, similar_chains)
 
-    
+    return (chains, similar_chains, pairs)
+
+
 def are_clashing(chain_one, chain_two, contact_distance=1.4):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
@@ -147,3 +153,22 @@ def stoichiometry_is_possible(stoichiometry, chains, similar_chains):
     if total < diff_real_chains:
         return False
     return True
+
+
+def write_structure_into_pdb(chains, name):
+    io = pdb.PDBIO()
+    s = pdb.Structure.Structure('test')
+    i = 1
+    for chain in chains:
+        s.add(pdb.Model.Model(i))
+        s[i].add(chain)
+        i += 1
+    io.set_structure(s)
+    io.save(name)
+
+
+def complex_fits_stoich(complex, stoichiometry):
+    if len(complex) == sum(stoichiometry.values()):
+        return True
+    else:
+        return False
