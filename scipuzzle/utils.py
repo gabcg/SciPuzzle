@@ -4,12 +4,14 @@ import Bio.PDB as pdb
 from Bio import pairwise2
 import itertools
 import os
+import exceptions
 
 
 def chain_to_fasta(chain):
     ppb = pdb.PPBuilder()
     for pp in ppb.build_peptides(chain):
         return pp.get_sequence()
+
 
 # TODO: do not include heteroatoms
 def get_chains(input_file, no_hetatm=False):
@@ -34,5 +36,9 @@ def filter_pairs(pairs):
             print(pairwise_sequence_identity)
     return filtered_pairs
 
-def stoichiometry_is_possible(stoichiometry,chains):
-    return True
+
+def stoichiometry_is_possible(stoichiometry, chains):
+    if chains == 1:
+        return True
+    else:
+        raise exceptions.IncorrectStoichiometry(stoichiometry = stoichiometry)
