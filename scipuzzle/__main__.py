@@ -35,4 +35,11 @@ print("Similar Chains:\n"+similar_chains)
 def construct_complex():
     test = utils.are_clashing(chains['1_C'], chains['1_D'])
     (test2, rmsd) = utils.superimpose(chains['1_C'], chains['1_D'])
+    # Output: List of lists of chain. Each list of chain corresponds to a
+    # constructed complex
     return complex
+
+# Step5: Filter the good ones
+
+# Step6
+# utils.write_structure_into_pdb(list of chains)
