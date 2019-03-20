@@ -3,6 +3,8 @@
 import Bio.PDB as pdb
 from Bio import pairwise2
 import itertools
+import os
+import exceptions
 
 
 def chain_to_fasta(chain):
@@ -79,5 +81,12 @@ def remove_useless_chains(chains, similar_chains):
         del chains[k]
     return (chains, similar_chains)
 
-def stoichiometry_is_possible(stoichiometry,chains):
-    return True
+
+
+
+
+def stoichiometry_is_possible(stoichiometry, chains):
+    if chains == 1:
+        return True
+    else:
+        raise exceptions.IncorrectStoichiometry(stoichiometry = stoichiometry)
