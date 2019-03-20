@@ -16,12 +16,14 @@ if options.verbose:
         sys.err(file)
 
 # STEP2: Get possible structures for Macrocomplex construction and skip others
-pairs = []
+chains = {}
+chain_index = 1
 for file in input_files:
-    pairs.append(utils.get_chains(file))
-pairs = utils.filter_pairs(pairs)
-print(pairs)
-
+    for chain in utils.get_chains(file):
+        chains[str(chain_index)+"_"+str(chain.id)] = chain
+    chain_index += 1
+similar_chains = utils.get_similar_chains(chains)
+(chains, similar_chains) = utils.remove_useless_chains(chains, similar_chains)
 
 # STEP3: Check for stoichiometry requirements
 chains = []
