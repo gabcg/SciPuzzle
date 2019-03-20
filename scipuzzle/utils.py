@@ -79,8 +79,5 @@ def remove_useless_chains(chains, similar_chains):
         del chains[k]
     return (chains, similar_chains)
 
-
-
-
 def stoichiometry_is_possible(stoichiometry,chains):
     return True
