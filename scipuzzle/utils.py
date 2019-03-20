@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import sys
 import Bio.PDB as pdb
 from Bio import pairwise2
 import itertools
-import os
 import exceptions
+import __main__ as main
 
 
 def chain_to_fasta(chain):
@@ -82,11 +83,42 @@ def remove_useless_chains(chains, similar_chains):
     return (chains, similar_chains)
 
 
+def are_clashing(chain_one, chain_two, contact_distance=1.4):
+    """
+    Compares the CA atoms of two chains and checks for clashes according to the
+    contact distance.
+    Returns a boolean.
+    """
+    atoms_one = [atom for atom in chain_one.get_atoms() if atom.name == 'CA']
+    atoms_two = [atom for atom in chain_two.get_atoms() if atom.name == 'CA']
+    ns = pdb.NeighborSearch(atoms_one)
+    for atom_two in atoms_two:
+        if len(ns.search(atom_two.get_coord(), contact_distance)) != 0:
+            if main.options.verbose:
+                sys.stderr.write("Clash Found!\n")
+            return True
+    return False
 
+
+def superimpose(chain_one, chain_two):
+    """
+    Superimposes two chains and returns the superimposed chain and the rmsd
+    of the superimposition.
+    """
+    super_imposer = pdb.Superimposer()
+    atoms_one = list(chain_one.get_atoms())
+    atoms_two = list(chain_two.get_atoms())
+    # Fix lengths so that they are the same
+    min_len = min(len(atoms_one), len(atoms_two))
+    atoms_one = atoms_one[:min_len]
+    atoms_two = atoms_two[:min_len]
+    super_imposer.set_atoms(atoms_one, atoms_two)
+    super_imposer.apply(chain_two.get_atoms())
+    return (chain_two, super_imposer.rms)
 
 
 def stoichiometry_is_possible(stoichiometry, chains):
     if chains == 1:
         return True
     else:
-        raise exceptions.IncorrectStoichiometry(stoichiometry = stoichiometry)
+        raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)

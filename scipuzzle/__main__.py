@@ -11,9 +11,10 @@ stoichiometry = None
 if options.stoichiometry is not None:
     stoichiometry = arguments.parse_stoichiometry(options.stoichiometry)
 if options.verbose:
-    sys.err("Input correctly parsed.\nFiles used as input:")
+    utils.options = options
+    sys.stderr.write("Input correctly parsed.\nFiles used as input:\n")
     for file in input_files:
-        sys.err(file)
+        sys.stderr.write(file+"\n")
 
 # STEP2: Get possible structures for Macrocomplex construction and skip others
 chains = {}
@@ -25,10 +26,13 @@ for file in input_files:
 similar_chains = utils.get_similar_chains(chains)
 (chains, similar_chains) = utils.remove_useless_chains(chains, similar_chains)
 
+print("Chains: \n"+ chains)
+print("Similar Chains:\n"+similar_chains)
 # STEP3: Check for stoichiometry requirements
-chains = []
-if not utils.stoichiometry_is_possible(stoichiometry, chains):
-    # TODO: change with trow exception!
-    exit()
+
 
 # STEP4: Begin Macrocomplex reconstruction!
+def construct_complex():
+    test = utils.are_clashing(chains['1_C'], chains['1_D'])
+    (test2, rmsd) = utils.superimpose(chains['1_C'], chains['1_D'])
+    return complex
