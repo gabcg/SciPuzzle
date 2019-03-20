@@ -47,17 +47,17 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
     chains that are similar to the key chain.
     """
     similar_chains = {}
-    for chain_one, chain_two in itertools.combinations(chains, 2):
-        alignments = pairwise2.align.globalxx(chain_to_fasta(chains[chain_one])
-                                              ,chain_to_fasta(chains[chain_two]))
+    for chain_1, chain_2 in itertools.combinations(chains, 2):
+        alignments = pairwise2.align.globalxx(chain_to_fasta(chains[chain_1]),
+                                              chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
-            if chain_one not in similar_chains:
-                similar_chains[chain_one] = []
-            if chain_two not in similar_chains:
-                similar_chains[chain_two] = []
-            similar_chains[chain_one].append(chain_two)
-            similar_chains[chain_two].append(chain_one)
+            if chain_1 not in similar_chains:
+                similar_chains[chain_1] = []
+            if chain_2 not in similar_chains:
+                similar_chains[chain_2] = []
+            similar_chains[chain_1].append(chain_2)
+            similar_chains[chain_2].append(chain_1)
     return similar_chains
 
 
@@ -82,7 +82,7 @@ def remove_useless_chains(chains, similar_chains):
         del chains[k]
     return (chains, similar_chains)
 
-
+    
 def are_clashing(chain_one, chain_two, contact_distance=1.4):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
@@ -117,8 +117,33 @@ def superimpose(chain_one, chain_two):
     return (chain_two, super_imposer.rms)
 
 
-def stoichiometry_is_possible(stoichiometry, chains):
-    if chains == 1:
-        return True
-    else:
-        raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
+def stoichiometry_is_possible(stoichiometry, chains, similar_chains):
+    """
+    This function looks if it is possible to construct a complex with the
+    files and the stoichiometry given by the user.
+    """
+    number_real_chains = sum(stoichiometry.values())
+    diff_real_chains = len(stoichiometry)
+    counter = 0
+    list_chains = []
+    # Look if we have enough files to fulfill the condition.
+    if number_real_chains > len(chains):
+        return False
+    # Look if we have found enough different chains as the number indicated
+    # by the stoichiometry.
+    for key in similar_chains:
+        if key not in list_chains:
+            counter += 1
+            list_chains.append(key)
+            if isinstance(similar_chains[key], (tuple, list)):
+                list_chains.extend(similar_chains[key])
+            else:
+                list_chains.append(similar_chains[key])
+    counter2 = 0
+    for chain in chains:
+        if chain not in list_chains:
+            counter2 += 1
+    total = counter + counter2
+    if total < diff_real_chains:
+        return False
+    return True

@@ -3,6 +3,7 @@
 import sys
 import arguments
 import utils
+import exceptions
 
 # STEP 1: parse the arguments
 options = arguments.read_args()
@@ -29,6 +30,8 @@ similar_chains = utils.get_similar_chains(chains)
 print("Chains: \n"+ chains)
 print("Similar Chains:\n"+similar_chains)
 # STEP3: Check for stoichiometry requirements
+if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
+    raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
 
 
 # STEP4: Begin Macrocomplex reconstruction!
