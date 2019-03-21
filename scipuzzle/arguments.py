@@ -4,16 +4,18 @@
 import argparse
 import os
 import re
-from gooey import Gooey
 
 
-@Gooey
 def read_args():
     """Parse the commandline arguments and returns the namespace."""
     parser = argparse.ArgumentParser(description="Recreates a macrocomplex \
                                                   given different pdb files \
                                                   containing interacting \
-                                                  protein pairs.")
+                                                  protein pairs. \
+                                                  \
+                                                  If you need a graphic \
+                                                  interface, use the -gui \
+                                                  option by itself.")
     parser.add_argument('-i', '--input', dest="input",
                         action="store",
                         default=None,
@@ -31,6 +33,10 @@ def read_args():
                         action="store_true",
                         default=False,
                         help="Verbose Mode")
+    # parser.add_argument('-gui', '--graphic_interface', dest="gui",
+    #                     action="store_true",
+    #                     default=False,
+    #                     help="Graphic user interface mode")
     options = parser.parse_args()
     return options
 

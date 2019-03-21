@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
-import gooeyinter
+import arguments
+import interface
 import utils
 import exceptions
 
-# STEP 1: parse the gooeyinter
-options = gooeyinter.read_args()
-input_files = gooeyinter.get_input_files(options.input)
+# STEP 1: parse the arguments
+if len(sys.argv) == '-gui':
+    options = interface.ui()
+else:
+    options = arguments.read_args()
+
+if options.gui == True:
+    options = interface.ui()
+
+input_files = arguments.get_input_files(options.input)
 stoichiometry = None
 if options.stoichiometry is not None:
-    stoichiometry = gooeyinter.parse_stoichiometry(options.stoichiometry)
+    stoichiometry = arguments.parse_stoichiometry(options.stoichiometry)
 if options.verbose:
     utils.options = options
     sys.stderr.write("Input correctly parsed.\nFiles used as input:\n")
