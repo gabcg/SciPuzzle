@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import argparse
 import os
 import re
@@ -7,7 +8,7 @@ import re
 
 def read_args():
     """Parse the commandline arguments and returns the namespace."""
-    parser = argparse.ArgumentParser(description="Recreates a Macrocomplex \
+    parser = argparse.ArgumentParser(description="Recreates a macrocomplex \
                                                   given different pdb files \
                                                   containing interacting \
                                                   protein pairs.")
@@ -58,7 +59,7 @@ def parse_stoichiometry(stoichiometry):
 
     e.g. A3B12C1 --> {'A':3, 'B':12, 'C':1}
     """
-    sto_dict = dict(re.findall("(\w)(\d*)",stoichiometry))
+    sto_dict = dict(re.findall("(\w)(\d*)", stoichiometry))
     for key in sto_dict:
         sto_dict[key] = int(sto_dict[key])
     return sto_dict

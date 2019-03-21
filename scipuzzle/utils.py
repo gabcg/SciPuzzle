@@ -10,7 +10,7 @@ import __main__ as main
 
 def chain_to_fasta(chain):
     """
-    Extracts the fasta sequence from a PDB file and returns a String
+    Extracts the fasta sequence from a PDB file and returns a string
     containing the extracted sequence.
     """
     ppb = pdb.PPBuilder()
@@ -40,11 +40,11 @@ def get_chains(input_file):
 def get_similar_chains(chains, sequence_identity_threshold=0.95):
     """
     Compute which chains are similar to which ones given a dictionary having
-    chain ids as keys and chain objects as values.
-    Returns a dictionary containing informations about which chains are similar
+    chain ID's as keys and chain objects as values.
+    Returns a dictionary containing information about which chains are similar
     to which chains, according to the sequence_identity_threshold.
-    Specifically the dictionary has as keys all chain ids and as values all the
-    chains that are similar to the key chain.
+    Specifically the dictionary has as keys all chain ID's and as values all
+    the chains that are similar to the key chain.
     """
     similar_chains = {}
     for chain_1, chain_2 in itertools.combinations(chains, 2):

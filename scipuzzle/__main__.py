@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
-import arguments
+import gooeyinter
 import utils
 import exceptions
 
-# STEP 1: parse the arguments
-options = arguments.read_args()
-input_files = arguments.get_input_files(options.input)
+# STEP 1: parse the gooeyinter
+options = gooeyinter.read_args()
+input_files = gooeyinter.get_input_files(options.input)
 stoichiometry = None
 if options.stoichiometry is not None:
-    stoichiometry = arguments.parse_stoichiometry(options.stoichiometry)
+    stoichiometry = gooeyinter.parse_stoichiometry(options.stoichiometry)
 if options.verbose:
     utils.options = options
     sys.stderr.write("Input correctly parsed.\nFiles used as input:\n")
@@ -36,6 +36,7 @@ print("Chains: \n" + str(chains))
 print("Paired chains: \n"+str(pairs))
 print("Similar Chains:\n"+str(similar_chains))
 print("Sto: " + str(stoichiometry))
+
 # STEP3: Check for stoichiometry requirements
 if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
     raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
@@ -53,7 +54,7 @@ def construct_complex(current_complex, chains,
         current_complex = chains[list(chains.keys())[0]]
         construct_complex(current_complex, chains,
                           similar_chains, stoichiometry, pairs_left)
-    # remove pairs left !! 
+    # remove pairs left!!
     print(current_complex)
     print("Wasdlakd")
 
