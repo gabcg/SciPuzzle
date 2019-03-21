@@ -4,8 +4,10 @@
 import argparse
 import os
 import re
+from gooey import Gooey
 
 
+@Gooey
 def read_args():
     """Parse the commandline arguments and returns the namespace."""
     parser = argparse.ArgumentParser(description="Recreates a macrocomplex \
