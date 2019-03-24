@@ -13,9 +13,9 @@ else:
     options = arguments.read_args()
 
 # Alternative using argparse
-options = arguments.read_args()
-if options.gui:
-    options = interface.gui()
+# options = arguments.read_args()
+# if options.gui:
+#     options = interface.gui()
 
 input_files = arguments.get_input_files(options.input)
 stoichiometry = None
@@ -48,10 +48,11 @@ print("Similar Chains:\n"+str(similar_chains))
 print("Sto: " + str(stoichiometry))
 
 if options.verbose:
-    sys.stderr.write('Number of chains: %s' % (len(chains)))
-    sys.stderr.write('Number of paired chains: %s' % (len(pairs)))
-    sys.stderr.write('Number of similar chains: %s' % (len(similar_chains)))
-    sys.stderr.write('Stoichiometry parsed as: %s' % (str(stoichiometry)))
+    sys.stderr.write('Number of chains: %s\n' % (len(chains)))
+    sys.stderr.write('Number of paired chains: %s\n' % (len(pairs)))
+    #sys.stderr.write('Number of similar chains: %s\n' % (len(similar_chains)))
+    #Change by 'stoichiometry correctly parsed, maybe', add exception
+    sys.stderr.write('Stoichiometry parsed as: %s\n' % (str(stoichiometry)))
 
 # STEP3: Check for stoichiometry requirements
 if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
