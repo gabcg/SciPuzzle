@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from gooey import Gooey
-from gooey import GooeyParser
+from gooey import Gooey, GooeyParser
 
+desc = """
+Recreates a macrocomplex given different pdb files containing interacting
+protein pairs."""
 
 @Gooey
 def ui():

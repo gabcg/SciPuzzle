@@ -7,13 +7,10 @@ import utils
 import exceptions
 
 # STEP 1: parse the arguments
-if len(sys.argv) == '-gui':
+if sys.argv[1] == '-gui':
     options = interface.ui()
 else:
     options = arguments.read_args()
-
-if options.gui == True:
-    options = interface.ui()
 
 input_files = arguments.get_input_files(options.input)
 stoichiometry = None
