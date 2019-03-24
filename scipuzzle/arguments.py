@@ -33,6 +33,10 @@ def read_args():
                         action="store_true",
                         default=False,
                         help="Verbose Mode")
+    parser.add_argument('-c', '--chimera', dest="open_chimera",
+                        action="store_true",
+                        default=False,
+                        help="Open models in Chimera when execution finishes")
     # parser.add_argument('-gui', '--graphic_interface', dest="gui",
     #                     action="store_true",
     #                     default=False,

@@ -8,9 +8,14 @@ import exceptions
 
 # STEP 1: parse the arguments
 if sys.argv[1] == '-gui':
-    options = interface.ui()
+    options = interface.gui()
 else:
     options = arguments.read_args()
+
+# Alternative using argparse
+options = arguments.read_args()
+if options.gui:
+    options = interface.gui()
 
 input_files = arguments.get_input_files(options.input)
 stoichiometry = None
@@ -42,6 +47,12 @@ print("Paired chains: \n"+str(pairs))
 print("Similar Chains:\n"+str(similar_chains))
 print("Sto: " + str(stoichiometry))
 
+if options.verbose:
+    sys.stderr.write('Number of chains: %s' % (len(chains)))
+    sys.stderr.write('Number of paired chains: %s' % (len(pairs)))
+    sys.stderr.write('Number of similar chains: %s' % (len(similar_chains)))
+    sys.stderr.write('Stoichiometry parsed as: %s' % (str(stoichiometry)))
+
 # STEP3: Check for stoichiometry requirements
 if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
     raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
@@ -50,8 +61,8 @@ if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
 # STEP4: Begin Macrocomplex reconstruction!
 def construct_complex(current_complex, chains,
                       similar_chains, stoichiometry, pairs_left):
-    # test = utils.are_clashing(chains['1_C'], chains['1_D'])
-    # (test2, rmsd) = utils.superimpose(chains['1_C'], chains['1_D'])
+    test = utils.are_clashing(chains['1_C'], chains['1_D'])
+    (test2, rmsd) = utils.superimpose(chains['1_C'], chains['1_D'])
 
     # current_complex is a list of chains
     # for the first round its going to be a random pair of chains.
@@ -65,7 +76,7 @@ def construct_complex(current_complex, chains,
 
     # Each time we add a new chain - update current_complex
 
-    # construct_complex(current_complex, chains, similar_chains, stoichiometry)
+    construct_complex(current_complex, chains, similar_chains, stoichiometry)
 
     # if current_complex fulfills stoichiometry - save in list and return
     if utils.complex_fits_stoich(current_complex, stoichiometry):
@@ -75,7 +86,14 @@ def construct_complex(current_complex, chains,
 
 
 test_complex = construct_complex([], chains, similar_chains, stoichiometry)
+
 # Step5: Filter the good ones
 
 # Step6 : write output file
-utils.write_structure_into_pdb(test_complex[0], 'test.pdb')
+utils.write_structure_into_pdb(test_complex[0], 'test2.pdb')
+
+# Step 7 (optional): open models in Chimera
+# Need to store the outputs as a list
+models = ['test.pdb']
+if options.open_chimera:
+    utils.open_in_chimera(models)

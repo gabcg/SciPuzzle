@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+import os
 import sys
 import Bio.PDB as pdb
 from Bio import pairwise2
@@ -172,3 +174,8 @@ def complex_fits_stoich(complex, stoichiometry):
         return True
     else:
         return False
+
+
+def open_in_chimera(models):
+    for file in models:
+        os.system('chimera' + file)
