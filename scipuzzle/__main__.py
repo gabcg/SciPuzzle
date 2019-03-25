@@ -50,8 +50,8 @@ print("Sto: " + str(stoichiometry))
 if options.verbose:
     sys.stderr.write('Number of chains: %s\n' % (len(chains)))
     sys.stderr.write('Number of paired chains: %s\n' % (len(pairs)))
-    #sys.stderr.write('Number of similar chains: %s\n' % (len(similar_chains)))
-    #Change by 'stoichiometry correctly parsed, maybe', add exception
+    # sys.stderr.write('Number of similar chains: %s\n' % (len(similar_chains)))
+    # Change by 'stoichiometry correctly parsed, maybe', add exception
     sys.stderr.write('Stoichiometry parsed as: %s\n' % (str(stoichiometry)))
 
 # STEP3: Check for stoichiometry requirements
@@ -61,21 +61,31 @@ if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
 
 # STEP4: Begin Macrocomplex reconstruction!
 def construct_complex(current_complex, chains,
-                      similar_chains, stoichiometry, pairs_left):
-    test = utils.are_clashing(chains['1_C'], chains['1_D'])
-    (test2, rmsd) = utils.superimpose(chains['1_C'], chains['1_D'])
+                      similar_chains, stoichiometry):
+    # test = utils.are_clashing(chains['1_C'], chains['1_D'])
+    # (test2, rmsd) = utils.superimpose(chains['1_C'], chains['1_D'])
 
     # current_complex is a list of chains
     # for the first round its going to be a random pair of chains.
     if len(current_complex) == 0:
+        # this adds the first chain to the complex
         current_complex = chains[list(chains.keys())[0]]
         construct_complex(current_complex, chains,
-                          similar_chains, stoichiometry, pairs_left)
+                          similar_chains, stoichiometry)
+
     # remove pairs left!!
+
     print(current_complex)
     print("Wasdlakd")
+    # Now I need to add a new chain.
 
     # Each time we add a new chain - update current_complex
+    # list_of_chains = chains[list(chains.keys())]
+    # for chain1 in list_of_chains:
+    #     for chain2 in current_complex:
+    #         (test2, rmsd) = utils.superimpose(chain1, chain2)
+    #         if not utils.are_clashing(chain1, chain2):
+    #             current_complex.append(chain1)
 
     construct_complex(current_complex, chains, similar_chains, stoichiometry)
 
