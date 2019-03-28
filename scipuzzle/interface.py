@@ -23,8 +23,14 @@ def gui():
                         action="store",
                         default="reconstructed_macrocomplex.pdb",
                         help="PDB formatted outputfile",
-                        widget="FileSaver",
+                        widget="FileSaver", #change to DirChooser if we want it to exist
                         metavar="Output (-o)")
+    # If we want the output to be a dir, then the model files need a prefix
+    # parser.add_argument('-p', '--prefix', dest="prefix",
+    #                     action="store",
+    #                     default="model",
+    #                     help="Prefix for your file models",
+    #                     metavar="Prefix (-p)")
     parser.add_argument('-s', '--stoichiometry', dest="stoichiometry",
                         action="store",
                         default=None,

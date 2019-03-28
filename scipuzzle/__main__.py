@@ -94,7 +94,12 @@ test_complex = construct_complex([], chains, similar_chains, stoichiometry)
 utils.write_structure_into_pdb(test_complex[0], 'test2.pdb')
 
 # Step 7 (optional): open models in Chimera
+
 # Need to store the outputs as a list
 models = ['test.pdb']
 if options.open_chimera:
     utils.open_in_chimera(models)
+
+# if output is a directory:
+# if options.open_chimera:
+#     utils.open_in_chimera(options.output)

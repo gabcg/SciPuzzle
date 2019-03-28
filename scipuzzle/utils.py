@@ -177,5 +177,14 @@ def complex_fits_stoich(complex, stoichiometry):
 
 
 def open_in_chimera(models):
-    for file in models:
-        os.system('chimera' + file)
+    for model in models:
+        sys.stderr.write('Opening model %s in Chimera' % model)
+        os.system('chimera' + model)
+
+# If output is a directory
+
+# def open_in_chimera(directory):
+#     for file in os.listdir(directory):
+#         if file.endswith('.pdb'):
+#             sys.stderr.write('Opening model %s in Chimera' % file)
+#             os.system('chimera' + file)
