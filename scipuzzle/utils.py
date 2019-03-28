@@ -18,6 +18,16 @@ def chain_to_fasta(chain):
         return pp.get_sequence()
 
 
+def get_structure(input_file):
+    """
+    Extracts the structure from a pdb file.
+    Returns the structure.
+    """
+    parser = pdb.PDBParser(QUIET=True)
+    structure = parser.get_structure('X', input_file)
+    return structure
+
+
 def get_chains(input_file):
     """
     Extracts the chains from a pdb file and removes the heteroatoms from it.
@@ -25,8 +35,7 @@ def get_chains(input_file):
     contained in the input file.
     """
     chains = []
-    parser = pdb.PDBParser(QUIET=True)
-    structure = parser.get_structure('X', input_file)
+    structure = get_structure(input_file)
     for model in structure:
         for chain in model:
             heteroatoms = list(filter(lambda x: x.id[0] != " ",
@@ -106,7 +115,42 @@ def are_clashing(chain_one, chain_two, contact_distance=1.4):
     return False
 
 
-def superimpose(chain_one, chain_two):
+def get_chain_from_structure(structure):
+    chains = []
+    for model in structure:
+        for chain in model:
+            chains.append(chain)
+    return chains
+
+
+def superimpose(structure_one, structure_two):
+    """
+    Superimposes two structures and returns the superimposed structure and the rmsd
+    of the superimposition.
+    """
+    print("Structure one : "+ str(structure_one))
+    print("Structure two : "+ str(structure_two))
+    print("len 1 : " + str(len(get_chain_from_structure(structure_one))))
+    print("len 2 : " + str(len(get_chain_from_structure(structure_two))))
+
+    super_imposer = pdb.Superimposer()
+    atoms_one = list(structure_one.get_atoms())
+    atoms_two = list(structure_two.get_atoms())
+    # Fix lengths so that they are the same
+    min_len = min(len(atoms_one), len(atoms_two))
+    atoms_one = atoms_one[:min_len]
+    atoms_two = atoms_two[:min_len]
+    super_imposer.set_atoms(atoms_one, atoms_two)
+    super_imposer.apply(structure_two.get_atoms())
+    return (structure_two, super_imposer.rms)
+
+def get_all_similar_pairs(pair, similar_chains, structures):
+
+    similar_pairs = []
+
+    return similar_pairs
+
+def superimpose_old(chain_one, chain_two):
     """
     Superimposes two chains and returns the superimposed chain and the rmsd
     of the superimposition.
@@ -155,7 +199,13 @@ def stoichiometry_is_possible(stoichiometry, chains, similar_chains):
     return True
 
 
-def write_structure_into_pdb(chains, name):
+def write_structure_into_pdb(structure, name):
+    io = pdb.PDBIO()
+    io.set_structure(structure)
+    io.save(name)
+
+
+def write_structure_into_pdb_old(chains, name):
     io = pdb.PDBIO()
     s = pdb.Structure.Structure('test')
     i = 1
