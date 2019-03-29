@@ -35,7 +35,7 @@ for file in input_files:
     for chain in utils.get_chain_from_structure(structure):
         chain_id = str(chain_index)+"_"+str(chain.id)
         chains[chain_id] = chain
-        chain.id  = chain_id
+        chain.id = chain_id
         paired_chains.append(chain_id)
     pairs.append(paired_chains)
     structures[tuple(paired_chains)] = structure
@@ -48,19 +48,30 @@ print("Paired chains: \n"+str(pairs))
 print("Similar Chains:\n"+str(similar_chains))
 print("Sto: " + str(stoichiometry))
 print("structures: \n" + str(structures))
-
+print(line)
+print(line)
 
 # STEP3: Check for stoichiometry requirements
-#if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
+# if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
 #    raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
 
 
+
+# def test(pair_one, pair_two):
+#     (superimposed, rmsd) = utils.superimpose(pair_one,pair_two)
+#     #pair_one.add()
+#     utils.write_structure_into_mmcif(pair_one, "test.cif")
+#
+# print("Here i am ")
+
+print("going further ")
 # STEP4: Begin Macrocomplex reconstruction!
 def construct_complex(current_complex, chains,
-                      similar_chains, stoichiometry, pairs, structures, used_pairs):
+                      similar_chains, stoichiometry, pairs,
+                      structures, used_pairs):
     # bruteforce ending!
     if current_complex is not None:
-        if len(utils.get_chain_from_structure(current_complex)) == 4:
+        if len(utils.get_chain_from_structure(current_complex)) == 3:
             print(line)
             print("Recursion Finished!")
             for chain in utils.get_chain_from_structure(current_complex):
@@ -76,7 +87,8 @@ def construct_complex(current_complex, chains,
         print("First case: beginning with "+ str(random_choice_id))
         used_pairs.append(random_choice_id)
         construct_complex(random_choice, chains,
-                          similar_chains, stoichiometry, pairs, structures, used_pairs)
+                          similar_chains, stoichiometry, pairs,
+                          structures, used_pairs)
         return
 
     print("------------------------------------------")
@@ -90,17 +102,20 @@ def construct_complex(current_complex, chains,
         for ps_id in ps:
             structure_id = ps[ps_id]
             structure_to_superimpose = structures[structure_id]
+            print("Superimposing")
+            print("Structure to superimpose: "+ str(structure_to_superimpose))
             # Superimpose current complex with one of the possible structures.
-            (superimposed, rmsd) = utils.superimpose(current_complex,structure_to_superimpose )
-            #print("ps id " + str(ps_id))
-            #print("chain in cu co "+ str(chain_in_current_complex))
+            (superimposed, rmsd) = utils.superimpose(current_complex,structure_to_superimpose)
+            # print("ps id " + str(ps_id))
+            # print("chain in cu co "+ str(chain_in_current_complex))
             for chain in utils.get_chain_from_structure(superimposed):
                 if chain.id != ps_id:
                     print("Trying with: "+ str(chain.id))
                     # check if are clashing
                     if structure_id not in used_pairs:
-                        if not utils.are_clashing(current_complex, chains[chain.id]):
-                            current_complex[0].add(chains[chain.id])
+                        #if not utils.are_clashing(current_complex, chains[chain.id]):
+
+                            current_complex[0].add(utils.get_chain(superimposed, chain.id))
                             used_pairs.append(structure_id)
                             print("no clash found!")
                             print("Adding: "+ str(chain.id))
@@ -108,18 +123,12 @@ def construct_complex(current_complex, chains,
                             construct_complex(current_complex, chains,
                                               similar_chains, stoichiometry, pairs,
                                               structures, used_pairs)
-                        else:
-                            print("Clash was found :(")
+                        #else:
+                            #print("Clash was found :(")
                     else:
                         print("already in used pairs")
-                    # print(current_complex)
-                    # for chain in utils.get_chains_in_complex(current_complex):
-                    #     print(" -- " + str(chain))
-    # if current_complex fulfills stoichiometry - save in list and return
-    # if utils.complex_fits_stoich(current_complex, stoichiometry):
-    #     # Output: List of lists of chain. Each list of chain corresponds to a
-    #     # constructed complex
-    #    return [current_complex]
+
+
 test_complex = construct_complex(None, chains, similar_chains,
                                  stoichiometry, pairs, structures, [])
 # Step5: Filter the good ones

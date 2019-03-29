@@ -54,18 +54,24 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
     Specifically the dictionary has as keys all chain ids and as values all the
     chains that are similar to the key chain.
     """
+    print("Testing get similar chains")
     similar_chains = {}
     for chain_1, chain_2 in itertools.combinations(chains, 2):
+        print("Chain one : " + str(chain_1))
+        print("Chain two : " + str(chain_2))
         alignments = pairwise2.align.globalxx(chain_to_fasta(chains[chain_1]),
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
-            if chain_1 not in similar_chains:
-                similar_chains[chain_1] = []
-            if chain_2 not in similar_chains:
-                similar_chains[chain_2] = []
-            similar_chains[chain_1].append(chain_2)
-            similar_chains[chain_2].append(chain_1)
+            (superimposed, rmsd) = superimpose(chains[chain_1], chains[chain_2])
+            print(rmsd)
+            if rmsd < 0.05:
+                if chain_1 not in similar_chains:
+                    similar_chains[chain_1] = []
+                if chain_2 not in similar_chains:
+                    similar_chains[chain_2] = []
+                similar_chains[chain_1].append(chain_2)
+                similar_chains[chain_2].append(chain_1)
     return similar_chains
 
 
@@ -124,6 +130,11 @@ def get_chain_from_structure(structure):
             chains.append(chain)
     return chains
 
+def get_chain(structure, chain_id):
+    for model in structure:
+        for chain in model:
+            if chain.id == chain_id:
+                return chain
 
 def get_possible_structures(chain_in_current_complex, similar_chains, structures):
     possible_structures = {}
