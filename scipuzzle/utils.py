@@ -98,20 +98,23 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(chain_one, chain_two, contact_distance=1.4):
+def are_clashing(chain_one, chain_two, max_clashes=50, contact_distance=1.0):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
     Returns a boolean.
     """
-    atoms_one = [atom for atom in chain_one.get_atoms() if atom.name == 'CA']
-    atoms_two = [atom for atom in chain_two.get_atoms() if atom.name == 'CA']
+    atoms_one = [atom for atom in chain_one.get_atoms() if atom.get_id() == 'CA']
+    atoms_two = [atom for atom in chain_two.get_atoms() if atom.get_id() == 'CA']
     ns = pdb.NeighborSearch(atoms_one)
+    clashes = 0
     for atom_two in atoms_two:
-        if len(ns.search(atom_two.get_coord(), contact_distance)) != 0:
+        for atom in ns.search(atom_two.get_coord(), contact_distance, 'A'):
+            clashes += 1
             if main.options.verbose:
                 sys.stderr.write("Clash Found!\n")
-            return True
+            if clashes == max_clashes:
+                return True
     return False
 
 
@@ -123,15 +126,35 @@ def get_chain_from_structure(structure):
     return chains
 
 
+
+def get_possible_structures(chain_in_current_complex, similar_chains, structures):
+    possible_structures = {}
+    if chain_in_current_complex in similar_chains:
+        for sim_chain in similar_chains[chain_in_current_complex]:
+            for tuple_key in structures:
+                if sim_chain in tuple_key:
+                    possible_structures[sim_chain] = (tuple_key)
+    return possible_structures
+
+
+def get_chains_in_complex(used_pairs):
+    chains = []
+    for pair_in_current_complex in used_pairs:
+        for chain_in_current_complex in pair_in_current_complex:
+            chains.append(chain_in_current_complex)
+    return chains
+
+
+def remove_chain(structure, chain_id):
+    for model in structure:
+        model.detach_child(chain_id)
+    return structure
+
 def superimpose(structure_one, structure_two):
     """
     Superimposes two structures and returns the superimposed structure and the rmsd
     of the superimposition.
     """
-    print("Structure one : "+ str(structure_one))
-    print("Structure two : "+ str(structure_two))
-    print("len 1 : " + str(len(get_chain_from_structure(structure_one))))
-    print("len 2 : " + str(len(get_chain_from_structure(structure_two))))
 
     super_imposer = pdb.Superimposer()
     atoms_one = list(structure_one.get_atoms())
@@ -197,6 +220,12 @@ def stoichiometry_is_possible(stoichiometry, chains, similar_chains):
     if total < diff_real_chains:
         return False
     return True
+
+
+def write_structure_into_mmcif(structure, name):
+    io = pdb.MMCIFIO()
+    io.set_structure(structure)
+    io.save(name)
 
 
 def write_structure_into_pdb(structure, name):
