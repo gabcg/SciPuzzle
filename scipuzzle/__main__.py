@@ -26,23 +26,10 @@ if options.verbose:
         sys.stderr.write(file+"\n")
 
 # Step 2: get possible structures for macrocomplex construction and skip others
-prefix = options.output + options.input + '_'
-
-print(options.input)
-print(options.output)
-
-exit(0)
 if options.resume:
-    information = utils.reload(options)
+    (chains, pairs, similar_chains, structures) = utils.resume(options)
 else:
-    information = utils.get_information(input_files, options)
-
-chains = information[0]
-pairs = information[1]
-similar_chains = information[2]
-structures = information[3]
-
-
+    (chains, pairs, similar_chains, structures) = utils.get_information(input_files, options)
 
 # STEP3: Check for stoichiometry requirements
 # if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):

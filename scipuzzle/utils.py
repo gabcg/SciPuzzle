@@ -8,17 +8,19 @@ import exceptions
 import copy
 import __main__ as main
 import pickle
+import os
 
 
-def reload(options):
+def resume(options):
     """
     Returns a list with data needed for running the program by reading the
     binary files created by pickle.
     """
-    chains = pickle.load(open(options.input + "_chains.p", "rb"))
-    pairs = pickle.load(open(options.input + "_pairs.p", "rb"))
-    similar_chains = pickle.load(open(options.input + "_similar_chains.p", "rb"))
-    structures = pickle.load(open(options.input + "_structures.p", "rb"))
+    prefix = 'resume/' + options.input
+    chains = pickle.load(open(prefix + "_chains.p", "rb"))
+    pairs = pickle.load(open(prefix + "_pairs.p", "rb"))
+    similar_chains = pickle.load(open(prefix + "_similar_chains.p", "rb"))
+    structures = pickle.load(open(prefix + "_structures.p", "rb"))
 
     if options.verbose:
         print("The following structures have been recovered:")
@@ -27,7 +29,7 @@ def reload(options):
         print("Similar Chains:\n"+str(similar_chains))
         print("structures: \n" + str(structures))
 
-    return [chains, pairs, similar_chains, structures]
+    return (chains, pairs, similar_chains, structures)
 
 
 def get_information(input_files, options):
@@ -72,19 +74,20 @@ def get_information(input_files, options):
         print("Similar Chains:\n"+str(similar_chains))
         print("structures: \n" + str(structures))
 
-    # Save everything to binary files to be able to reload.
-
-    chains_backup = open(options.input + "_chains.p", "wb")
-    pairs_backup = open(options.input + "_pairs.p", "wb")
-    similar_chains_backup = open(options.input + "_similar_chains.p", "wb")
-    structures_backup = open(options.input + "_structures.p", "wb")
-
+    # Save everything to binary files to be able to resume.
+    if not os.path.exists('resume'):
+        os.makedirs('resume')
+    prefix = 'resume/' + options.input
+    chains_backup = open(prefix + "_chains.p", "wb")
+    pairs_backup = open(prefix + "_pairs.p", "wb")
+    similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
+    structures_backup = open(prefix + "_structures.p", "wb")
     pickle.dump(chains, chains_backup)
     pickle.dump(pairs, pairs_backup)
     pickle.dump(similar_chains, similar_chains_backup)
     pickle.dump(structures, structures_backup)
 
-    return [chains, pairs, similar_chains, structures]
+    return (chains, pairs, similar_chains, structures)
 
 
 def chain_to_fasta(chain):
