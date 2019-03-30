@@ -35,7 +35,8 @@ def read_args():
     parser.add_argument('-r', '--resume', dest="resume",
                         action="store_true",
                         default=False,
-                        help="Resume the program after a crash")
+                        help="Resume the program after a crash or when using \
+                        a different stoichiometry")
     parser.add_argument('-c', '--chimera', dest="open_chimera",
                         action="store_true",
                         default=False,

@@ -219,7 +219,12 @@ def are_clashing(chain_one, chain_two, max_clashes=50, contact_distance=1.0):
     return False
 
 
-def get_chain_from_structure(structure, remove_het = False):
+def get_chains_from_structure(structure, remove_het = False):
+    """
+    Creates a list of chains out of a given structure.
+    If remove_het is set to true, the heteroatoms are removed from the chain.
+    Returns the list of chains.
+    """
     chains = []
     for model in structure:
         for chain in model:
@@ -233,23 +238,35 @@ def get_chain_from_structure(structure, remove_het = False):
                 chains.append(chain)
     return chains
 
-def get_chain(structure, chain_id):
-    for model in structure:
-        for chain in model:
-            if chain.id == chain_id:
-                return chain
 
-def get_possible_structures(chain_in_current_complex, similar_chains, structures):
+def get_chain(structure, chain_id):
+    """
+    Extract a specific chain from a structure given a specified chain id.
+    Returns a chain object.
+    """
+    for chain in get_chains_from_structure(structure):
+        if chain.id == chain_id:
+            return chain
+
+
+def get_possible_structures(chain_in_current_complex, similar_chains,
+                            structures, used_pairs):
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
         for sim_chain in similar_chains[chain_in_current_complex]:
             for tuple_key in structures:
                 if sim_chain in tuple_key:
-                    possible_structures[sim_chain] = (tuple_key)
+                    if tuple_key not in used_pairs:
+                        possible_structures[sim_chain] = (tuple_key)
     return possible_structures
 
 
 def get_chains_in_complex(used_pairs):
+    """
+    Extracts the names of the chains given a list of tuples containing the
+    chains' names.
+    Returns a list of chain ids.
+    """
     chains = []
     for pair_in_current_complex in used_pairs:
         for chain_in_current_complex in pair_in_current_complex:
@@ -258,6 +275,10 @@ def get_chains_in_complex(used_pairs):
 
 
 def remove_chain(structure, chain_id):
+    """
+    removes a chain from a structure.
+    Returns the new structure.
+    """
     for model in structure:
         model.detach_child(chain_id)
     return structure
@@ -282,8 +303,12 @@ def superimpose_chains_test(chain_one_real, chain_two_real):
 
 
 def print_chain_in_structure(structure):
+    """
+    Prints all chains of a given structure in a human-readable way.
+    Method used in development.
+    """
     if structure is not None:
-        for chain in get_chain_from_structure(structure):
+        for chain in get_chains_from_structure(structure):
             print("Chain id: " + str(chain.id) + " --> " + str(chain))
 
 
@@ -306,12 +331,10 @@ def superimpose_chains(chain_one_real, chain_two_real):
     return (chain_two, super_imposer.rms)
 
 
-
-
 def superimpose(structure_one_real, structure_two_real):
     """
-    Superimposes two structures and returns the superimposed structure and the rmsd
-    of the superimposition.
+    Superimposes two structures and returns the superimposed structure and the
+    rmsd of the superimposition.
     """
     structure_one = copy.deepcopy(structure_one_real)
     structure_two = copy.deepcopy(structure_two_real)
@@ -326,69 +349,35 @@ def superimpose(structure_one_real, structure_two_real):
     super_imposer.apply(list(structure_two[0].get_atoms()))
     return (structure_two, super_imposer.rms)
 
+# REMOVE ?
+# def stoichiometry_is_not_ended(stoichiometry, current_chains_in_complex):
+#     """
+#     This function looks if it is possible to construct a complex with the
+#     files and the stoichiometry given by the user.
+#     """
+#     number_real_chains = sum(stoichiometry.values())
+#     if current_chains_in_complex < number_real_chains:
+#         return True
+#     else:
+#         return False
 
-def get_all_similar_pairs(pair, similar_chains, structures):
 
-    similar_pairs = []
-
-    return similar_pairs
-
-
-def superimpose_old(chain_one, chain_two):
+def write_structure_into_file(structure, name, format):
     """
-    Superimposes two chains and returns the superimposed chain and the rmsd
-    of the superimposition.
+    Writes the strcuture into a file. The file can be either a pdb or a mmcif.
+    Format needs to be either "pdb" or "mmcif" depending on the desired output
+    file.
     """
-    super_imposer = pdb.Superimposer()
-    atoms_one = list(chain_one.get_atoms())
-    atoms_two = list(chain_two.get_atoms())
-    # Fix lengths so that they are the same
-    min_len = min(len(atoms_one), len(atoms_two))
-    atoms_one = atoms_one[:min_len]
-    atoms_two = atoms_two[:min_len]
-    super_imposer.set_atoms(atoms_one, atoms_two)
-    super_imposer.apply(chain_two.get_atoms())
-    return (chain_two, super_imposer.rms)
-
-
-def stoichiometry_is_not_ended(stoichiometry, current_chains_in_complex):
-    """
-    This function looks if it is possible to construct a complex with the
-    files and the stoichiometry given by the user.
-    """
-    number_real_chains = sum(stoichiometry.values())
-    if current_chains_in_complex < number_real_chains:
-        return True
-    else:
-        return False
-
-
-def write_structure_into_mmcif(structure, name):
-    io = pdb.MMCIFIO()
+    if format == "pdb":
+        io = pdb.PDBIO()
+    elif format == "mmcif":
+        io = pdb.MMCIFIO()
     io.set_structure(structure)
-    io.save(name)
-
-
-def write_structure_into_pdb(structure, name):
-    io = pdb.PDBIO()
-    io.set_structure(structure)
-    io.save(name)
-
-
-def write_structure_into_pdb_old(chains, name):
-    io = pdb.PDBIO()
-    s = pdb.Structure.Structure('test')
-    i = 1
-    for chain in chains:
-        s.add(pdb.Model.Model(i))
-        s[i].add(chain)
-        i += 1
-    io.set_structure(s)
     io.save(name)
 
 
 def complex_fits_stoich(complex, stoichiometry):
-    if len(get_chain_from_structure(complex)) == sum(stoichiometry.values()):
+    if len(get_chains_from_structure(complex)) == sum(stoichiometry.values()):
         return True
     else:
         return False
