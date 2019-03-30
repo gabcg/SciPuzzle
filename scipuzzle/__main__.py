@@ -104,6 +104,7 @@ def construct_complex(current_complex_real, chains,
                                           structures, used_pairs)
                         return
 
+
 test_complex = construct_complex(None, chains, similar_chains,
                                  stoichiometry, pairs, structures, [])
 
