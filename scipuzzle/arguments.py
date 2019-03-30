@@ -28,6 +28,10 @@ def read_args():
                         action="store_true",
                         default=False,
                         help="Verbose Mode")
+    parser.add_argument('-r', '--resume', dest="verbose",
+                        action="store_true",
+                        default=False,
+                        help="Verbose Mode")
     options = parser.parse_args()
     return options
 
