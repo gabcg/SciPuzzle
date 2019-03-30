@@ -19,8 +19,7 @@ def read_args():
     parser.add_argument('-i', '--input', dest="input",
                         action="store",
                         default=None,
-                        help="Input Folder containing PDB formatted files",
-                        required=True)
+                        help="Input Folder containing PDB formatted files")
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
                         default="reconstructed_macrocomplex.pdb",
@@ -37,10 +36,10 @@ def read_args():
                         action="store_true",
                         default=False,
                         help="Open models in Chimera when execution finishes")
-    # parser.add_argument('-gui', '--graphic_interface', dest="gui",
-    #                     action="store_true",
-    #                     default=False,
-    #                     help="Graphic user interface mode")
+    parser.add_argument('-gui', '--graphic_interface', dest="gui",
+                        action="store_true",
+                        default=False,
+                        help="Graphic user interface mode")
     options = parser.parse_args()
     return options
 

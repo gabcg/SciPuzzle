@@ -8,15 +8,10 @@ import exceptions
 
 
 # STEP 1: parse the arguments
-if sys.argv[1] == '-gui':
-    options = interface.gui()
-else:
-    options = arguments.read_args()
 
-# Alternative using argparse
-# options = arguments.read_args()
-# if options.gui:
-#     options = interface.gui()
+options = arguments.read_args()
+if options.gui:
+    options = interface.gui()
 
 input_files = arguments.get_input_files(options.input)
 stoichiometry = None
