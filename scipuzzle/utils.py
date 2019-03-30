@@ -67,17 +67,17 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
     Specifically the dictionary has as keys all chain ids and as values all the
     chains that are similar to the key chain.
     """
-    print("Testing get similar chains")
+
     similar_chains = {}
+    if main.options.verbose:
+        sys.stderr.write("\nComputing similar chains ... \n")
     for chain_1, chain_2 in itertools.combinations(chains, 2):
-        print("Chain one : " + str(chain_1))
-        print("Chain two : " + str(chain_2))
         alignments = pairwise2.align.globalxx(chain_to_fasta(chains[chain_1]),
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
             (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
-            print(rmsd)
+
             if rmsd < 0.05:
                 if chain_1 not in similar_chains:
                     similar_chains[chain_1] = []
@@ -116,7 +116,7 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(chain_one, chain_two, max_clashes=50, contact_distance=1.0):
+def are_clashing(chain_one, chain_two, max_clashes=30, contact_distance=2.0):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
@@ -129,9 +129,9 @@ def are_clashing(chain_one, chain_two, max_clashes=50, contact_distance=1.0):
     for atom_two in atoms_two:
         for atom in ns.search(atom_two.get_coord(), contact_distance, 'A'):
             clashes += 1
-            if main.options.verbose:
-                sys.stderr.write("Clash Found!\n")
             if clashes == max_clashes:
+                if main.options.verbose:
+                    sys.stderr.write("Clash Found!\n")
                 return True
     return False
 
@@ -167,13 +167,13 @@ def get_chain(structure, chain_id):
 
 
 def get_possible_structures(chain_in_current_complex, similar_chains,
-                            structures, used_pairs):
+                            structures, used_pairs, clashing):
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
         for sim_chain in similar_chains[chain_in_current_complex]:
             for tuple_key in structures:
                 if sim_chain in tuple_key:
-                    if tuple_key not in used_pairs:
+                    if tuple_key not in used_pairs and tuple_key not in clashing:
                         possible_structures[sim_chain] = (tuple_key)
     return possible_structures
 
