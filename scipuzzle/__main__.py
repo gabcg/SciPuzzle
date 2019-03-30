@@ -8,12 +8,10 @@ import Bio.PDB as pdb
 import copy
 import random
 import re
-import pickle
-
 
 line = "-------------------------------------"
 
-# STEP 1: parse the arguments
+# Step 1: parse the arguments
 options = arguments.read_args()
 input_files = arguments.get_input_files(options.input)
 stoichiometry = None
