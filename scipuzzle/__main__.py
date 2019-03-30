@@ -26,20 +26,23 @@ if options.verbose:
         sys.stderr.write(file+"\n")
 
 if options.resume:
-    chains = pickle.load(open("~/Desktop/chains.p", "rb"))
-    pairs = pickle.load(open("pairs.p", "rb"))
-    similar_chains = pickle.load(open("similar_chains.p", "rb"))
-    structures = pickle.load(open("structures.p", "rb"))
-    stoichiometry =pickle.load(open("stoichiometry.p", "rb"))
+    try:
+        chains = pickle.load(open(options.input + "_chains.p", "rb"))
+        pairs = pickle.load(open(options.input + "_pairs.p", "rb"))
+        similar_chains = pickle.load(open(options.input + "_similar_chains.p", "rb"))
+        structures = pickle.load(open(options.input + "_structures.p", "rb"))
+        # stoichiometry =pickle.load(open(options.input + "stoichiometry.p", "rb"))
 
-    print("The following structures have been recovered:")
-    print("Chains: \n" + str(chains))
-    print("Paired chains: \n"+str(pairs))
-    print("Similar Chains:\n"+str(similar_chains))
-    print("Sto: " + str(stoichiometry))
-    print("structures: \n" + str(structures))
-    print(line)
-    print(line)
+        print("The following structures have been recovered:")
+        print("Chains: \n" + str(chains))
+        print("Paired chains: \n"+str(pairs))
+        print("Similar Chains:\n"+str(similar_chains))
+        print("Sto: " + str(stoichiometry))
+        print("structures: \n" + str(structures))
+        print(line)
+        print(line)
+    except FileNotFoundError:
+        utils.get_data()
 
 else:
     # STEP2: Get possible structures for Macrocomplex construction and skip others
@@ -70,17 +73,17 @@ else:
     print(line)
 
     if options.allow_resume:
-        chains_b = open("chains.p", "wb")
-        pairs_b = open("pairs.p", "wb")
-        similar_chains_b = open("similar_chains.p", "wb")
-        structures_b = open("structures.p", "wb")
-        stioichiometry_b = open("stoichiometry.p", "wb")
+        chains_b = open(options.input + "_chains.p", "wb")
+        pairs_b = open(options.input + "_pairs.p", "wb")
+        similar_chains_b = open(options.input + "_similar_chains.p", "wb")
+        structures_b = open(options.input + "_structures.p", "wb")
+        # stioichiometry_b = open(options.input + "stoichiometry.p", "wb")
 
         pickle.dump(chains, chains_b)
         pickle.dump(pairs, pairs_b)
         pickle.dump(similar_chains, similar_chains_b)
         pickle.dump(structures, structures_b)
-        pickle.dump(stoichiometry, stioichiometry_b)
+        # pickle.dump(stoichiometry, stioichiometry_b)
 
 # STEP3: Check for stoichiometry requirements
 # if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
