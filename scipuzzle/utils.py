@@ -245,11 +245,13 @@ def superimpose(structure_one_real, structure_two_real):
     super_imposer.apply(list(structure_two[0].get_atoms()))
     return (structure_two, super_imposer.rms)
 
+
 def get_all_similar_pairs(pair, similar_chains, structures):
 
     similar_pairs = []
 
     return similar_pairs
+
 
 def superimpose_old(chain_one, chain_two):
     """
@@ -268,36 +270,16 @@ def superimpose_old(chain_one, chain_two):
     return (chain_two, super_imposer.rms)
 
 
-def stoichiometry_is_possible(stoichiometry, chains, similar_chains):
+def stoichiometry_is_not_ended(stoichiometry, current_chains_in_complex):
     """
     This function looks if it is possible to construct a complex with the
     files and the stoichiometry given by the user.
     """
     number_real_chains = sum(stoichiometry.values())
-    diff_real_chains = len(stoichiometry)
-    counter = 0
-    list_chains = []
-    # Look if we have enough files to fulfill the condition.
-    if number_real_chains > len(chains):
+    if current_chains_in_complex < number_real_chains:
+        return True
+    else:
         return False
-    # Look if we have found enough different chains as the number indicated
-    # by the stoichiometry.
-    for key in similar_chains:
-        if key not in list_chains:
-            counter += 1
-            list_chains.append(key)
-            if isinstance(similar_chains[key], (tuple, list)):
-                list_chains.extend(similar_chains[key])
-            else:
-                list_chains.append(similar_chains[key])
-    counter2 = 0
-    for chain in chains:
-        if chain not in list_chains:
-            counter2 += 1
-    total = counter + counter2
-    if total < diff_real_chains:
-        return False
-    return True
 
 
 def write_structure_into_mmcif(structure, name):
