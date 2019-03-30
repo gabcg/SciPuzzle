@@ -165,6 +165,47 @@ def get_chain(structure, chain_id):
         if chain.id == chain_id:
             return chain
 
+def get_chain_ids_from_structure(structure):
+    chains_ids = []
+    for model in structure:
+        for c in model:
+            chains_ids.append(c.id)
+    return chains_ids
+
+
+def complexes_are_equal(structure1, structure2):
+    chain_ids_one = get_chain_ids_from_structure(structure1)
+    chain_ids_two = get_chain_ids_from_structure(structure2)
+
+
+
+
+def add_chain(structure, chain):
+    chains_ids = get_chain_ids_from_structure(structure)
+    if chain.id in chains_ids:
+        chain.id = chain.id+"_"+chain.id
+    structure[0].add(chain)
+
+def modify_ids_first_pair(structure, mapping_chain_ids, used_pairs):
+    chains = get_chains_in_complex(structure)
+    print("asdasdas")
+    print(chains[0].id)
+    print(chains[1].id)
+    mapping_chain_ids[chains[0].id] = 'A'
+    mapping_chain_ids[chains[1].id] = 'B'
+    chains[0].id = 'A'
+    chains[1].id = 'B'
+    used_pairs.append(())
+
+
+
+def add_chain_to_structure(complex, chain_real, possible_ids, mapping_chain_ids):
+    chain = copy.deepcopy(chain_real)
+    id_to_assign = possible_ids.pop(0)
+    print("Assigning id " + str(id_to_assign) + " to " +  str(chain.id))
+    mapping_chain_ids[chain.id] = id_to_assign
+    chain.id = id_to_assign
+    complex[0].add(chain)
 
 def get_possible_structures(chain_in_current_complex, similar_chains,
                             structures, used_pairs, clashing):
@@ -173,8 +214,11 @@ def get_possible_structures(chain_in_current_complex, similar_chains,
         for sim_chain in similar_chains[chain_in_current_complex]:
             for tuple_key in structures:
                 if sim_chain in tuple_key:
-                    if tuple_key not in used_pairs and tuple_key not in clashing:
-                        possible_structures[sim_chain] = (tuple_key)
+                    print(tuple_key)
+                    print(used_pairs)
+                    if tuple_key not in used_pairs:
+                        if tuple_key not in clashing:
+                            possible_structures[sim_chain] = (tuple_key)
     return possible_structures
 
 
