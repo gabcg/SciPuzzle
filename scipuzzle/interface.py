@@ -41,6 +41,11 @@ def gui():
                         default=False,
                         help="Enable verbose mode",
                         metavar="Verbose (-v)")
+    parser.add_argument('-r', '--resume', dest="resume",
+                        action="store_true",
+                        default=False,
+                        help="Resume the program after a crash",
+                        metavar="Resume (-r)")
     parser.add_argument('-c', '--chimera', dest="open_chimera",
                         action="store_true",
                         default=False,

@@ -10,26 +10,24 @@ import exceptions
 import copy
 import __main__ as main
 import pickle
-import os
-
 
 def resume(options):
     """
     Returns a list with data needed for running the program by reading the
     binary files created by pickle.
     """
-    prefix = 'resume/' + options.input
+    prefix = 'resume/' + options.input.split('/')[-1]
     chains = pickle.load(open(prefix + "_chains.p", "rb"))
     pairs = pickle.load(open(prefix + "_pairs.p", "rb"))
     similar_chains = pickle.load(open(prefix + "_similar_chains.p", "rb"))
     structures = pickle.load(open(prefix + "_structures.p", "rb"))
 
     if options.verbose:
-        print("The following structures have been recovered:")
-        print("Chains: \n" + str(chains))
-        print("Paired chains: \n"+str(pairs))
-        print("Similar Chains:\n"+str(similar_chains))
-        print("structures: \n" + str(structures))
+        sys.stderr.write("The following structures have been recovered:\n")
+        sys.stderr.write("\tChains: %s\n" % len(chains))
+        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
+        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
+        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
 
     return (chains, pairs, similar_chains, structures)
 
@@ -49,7 +47,6 @@ def get_information(input_files, options):
 
     At the end, the unneeded chains are removed.
     """
-
     chains = {}
     pairs = []
     structures = {}
@@ -70,16 +67,10 @@ def get_information(input_files, options):
                                                             similar_chains,
                                                             pairs)
 
-    if options.verbose:
-        print("Chains: \n" + str(chains))
-        print("Paired chains: \n"+str(pairs))
-        print("Similar Chains:\n"+str(similar_chains))
-        print("structures: \n" + str(structures))
-
     # Save everything to binary files to be able to resume.
     if not os.path.exists('resume'):
         os.makedirs('resume')
-    prefix = 'resume/' + options.input
+    prefix = 'resume/' + options.input.split('/')[-1]
     chains_backup = open(prefix + "_chains.p", "wb")
     pairs_backup = open(prefix + "_pairs.p", "wb")
     similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
@@ -88,6 +79,15 @@ def get_information(input_files, options):
     pickle.dump(pairs, pairs_backup)
     pickle.dump(similar_chains, similar_chains_backup)
     pickle.dump(structures, structures_backup)
+
+    if options.verbose:
+        sys.stderr.write("The analysis of the input results in:\n")
+        sys.stderr.write("\tChains: %s\n" % len(chains))
+        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
+        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
+        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
+        sys.stderr.write("Resume files have been saved in %s/resume\n"
+                         % os.getcwd())
 
     return (chains, pairs, similar_chains, structures)
 
@@ -150,17 +150,17 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
     Specifically the dictionary has as keys all chain ID's and as values all
     the chains that are similar to the key chain.
     """
-    print("Testing get similar chains")
+    # print("Testing get similar chains")
     similar_chains = {}
     for chain_1, chain_2 in itertools.combinations(chains, 2):
-        print("Chain one : " + str(chain_1))
-        print("Chain two : " + str(chain_2))
+        # print("Chain one : " + str(chain_1))
+        # print("Chain two : " + str(chain_2))
         alignments = pairwise2.align.globalxx(chain_to_fasta(chains[chain_1]),
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
             (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
-            print(rmsd)
+            # print(rmsd)
             if rmsd < 0.05:
                 if chain_1 not in similar_chains:
                     similar_chains[chain_1] = []

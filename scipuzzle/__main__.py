@@ -25,7 +25,8 @@ if options.verbose:
     utils.options = options
     sys.stderr.write("Input correctly parsed.\nFiles used as input:\n")
     for file in input_files:
-        sys.stderr.write(file+"\n")
+        sys.stderr.write("\t"+file+"\n")
+    sys.stderr.write("\n")
 
 # Step 2: get possible structures for macrocomplex construction and skip others
 if options.resume:
@@ -41,6 +42,7 @@ else:
 # one = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XA.pdb")
 # two = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XB.pdb")
 
+exit(0)
 def test(pair_one, pair_two):
 
     print("lala")
