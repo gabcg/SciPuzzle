@@ -5,6 +5,7 @@ import arguments
 import interface
 import utils
 import exceptions
+import pickle
 
 # STEP 1: parse the arguments
 if sys.argv[1] == '-gui':
@@ -26,6 +27,14 @@ if options.verbose:
     sys.stderr.write("Input correctly parsed.\nFiles used as input:\n")
     for file in input_files:
         sys.stderr.write(file+"\n")
+
+if options.resume:
+    chains = pickle.load(open("chains.p", "rb"))
+    pairs = pickle.load(open("pairs.p", "rb"))
+    similar_chains = pickle.load(open("similar_chains.p", "rb"))
+    stoichiometry =pickle.load(open("stoichiometry.p", "rb"))
+else:
+
 
 # STEP2: Get possible structures for Macrocomplex construction and skip others
 chains = {}
@@ -58,6 +67,15 @@ if options.verbose:
 if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
     raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
 
+chains_b = open("chains.p", "wb")
+pairs_b = open("pairs.p", "wb")
+similar_chains_b = open("similar_chains.p", "wb")
+stioichiometry_b = open("stoichiometry.p", "wb")
+
+pickle.dump(chains, chains_b)
+pickle.dump(pairs, pairs_b)
+pickle.dump(similar_chains, similar_chains_b)
+pickle.dump(stoichiometry, stioichiometry_b)
 
 # STEP4: Begin Macrocomplex reconstruction!
 def construct_complex(current_complex, chains,
