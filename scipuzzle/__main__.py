@@ -42,7 +42,7 @@ if options.resume:
         print(line)
         print(line)
     except FileNotFoundError:
-        utils.get_data()
+        print("The files don't exist")
 
 else:
     # STEP2: Get possible structures for Macrocomplex construction and skip others
