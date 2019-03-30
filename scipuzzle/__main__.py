@@ -98,12 +98,15 @@ def construct_complex(current_complex_real, chains,
                                                similar_chains, structures, used_pairs)
             print("Possible structures : "+ str(ps))
             print("Len ps!!! "+ str(len(ps)))
+            for i in ps:
+                print("iteration : "+ i )
 
             for similar_chain_id in ps:
+
                 structure_id = ps[similar_chain_id]
                 structure_to_superimpose = structures[structure_id]
                 other = [tuple_id for tuple_id in structure_id if tuple_id != similar_chain_id][0]
-                print("similar_chain_id" + str(similar_chain_id))
+                print("similar_chain_id " + str(similar_chain_id))
                 print("Other (to superimpose) : " + other)
 
                 print("Superimposing")
@@ -125,12 +128,14 @@ def construct_complex(current_complex_real, chains,
                         for chain in utils.get_chain_from_structure(current_complex):
                             print(chain)
                         complexes_found.append(current_complex)
+
                         return
                     else:
                         print("getting here!")
                         construct_complex(current_complex, chains,
                                           similar_chains, stoichiometry, pairs,
                                           structures, used_pairs)
+                        return
 
 
 test_complex = construct_complex(None, chains, similar_chains,
