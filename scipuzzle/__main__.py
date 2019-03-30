@@ -110,23 +110,15 @@ test_complex = construct_complex(None, chains, similar_chains,
 
 # Step5: Filter the good ones
 
-# Step6 : write output file
+# Step 6: write output file
 index_file = 0
+
 for complex in complexes_found:
     index_file += 1
-    utils.write_structure_into_file(complex, "results/output"+str(index_file)+".cif", "mmcif")
-
-# Step 7
-
-utils.write_structure_into_pdb(test_complex[0], 'test2.pdb')
+    utils.write_structure_into_file(complex,
+                                    options.output+str(index_file)+".cif",
+                                    "mmcif")
 
 # Step 7 (optional): open models in Chimera
-
-# Need to store the outputs as a list
-models = ['test.pdb']
 if options.open_chimera:
-    utils.open_in_chimera(models)
-
-# if output is a directory:
-# if options.open_chimera:
-#     utils.open_in_chimera(options.output)
+    utils.open_in_chimera(options.output)

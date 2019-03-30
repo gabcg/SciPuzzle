@@ -322,12 +322,6 @@ def complex_fits_stoich(complex, stoichiometry):
         return False
 
 
-def open_in_chimera(models):
-    for model in models:
-        sys.stderr.write('Opening model %s in Chimera' % model)
-        os.system('chimera' + model)
-
-
 def get_information(input_files, options):
     """
     Gets the possible structures for the macrocomplex construction.
@@ -387,10 +381,17 @@ def get_information(input_files, options):
 
     return (chains, pairs, similar_chains, structures)
 
-# If output is a directory
 
-# def open_in_chimera(directory):
-#     for file in os.listdir(directory):
-#         if file.endswith('.pdb'):
-#             sys.stderr.write('Opening model %s in Chimera' % file)
-#             os.system('chimera' + file)
+def open_in_chimera(directory, options):
+    """
+    Opens all the models in Chimera if the user specified it. Works with Linux
+    and macOS.
+    """
+    for file in os.listdir(directory):
+        if file.endswith('.pdb'):
+            if options.verbose:
+                sys.stderr.write('Opening model %s in Chimera' % file)
+            if sys.platform == 'darwin':
+                os.system('/Applications/Chimera.app/Contents/MacOS/chimera' + file)
+            else:
+                os.system('chimera' + file)
