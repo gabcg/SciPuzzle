@@ -26,10 +26,21 @@ if options.verbose:
         sys.stderr.write(file+"\n")
 
 if options.resume:
-    chains = pickle.load(open("chains.p", "rb"))
+    chains = pickle.load(open("~/Desktop/chains.p", "rb"))
     pairs = pickle.load(open("pairs.p", "rb"))
     similar_chains = pickle.load(open("similar_chains.p", "rb"))
+    structures = pickle.load(open("structures.p", "rb"))
     stoichiometry =pickle.load(open("stoichiometry.p", "rb"))
+
+    print("The following structures have been recovered:")
+    print("Chains: \n" + str(chains))
+    print("Paired chains: \n"+str(pairs))
+    print("Similar Chains:\n"+str(similar_chains))
+    print("Sto: " + str(stoichiometry))
+    print("structures: \n" + str(structures))
+    print(line)
+    print(line)
+
 else:
     # STEP2: Get possible structures for Macrocomplex construction and skip others
     chains = {}
@@ -62,11 +73,13 @@ else:
         chains_b = open("chains.p", "wb")
         pairs_b = open("pairs.p", "wb")
         similar_chains_b = open("similar_chains.p", "wb")
+        structures_b = open("structures.p", "wb")
         stioichiometry_b = open("stoichiometry.p", "wb")
 
         pickle.dump(chains, chains_b)
         pickle.dump(pairs, pairs_b)
         pickle.dump(similar_chains, similar_chains_b)
+        pickle.dump(structures, structures_b)
         pickle.dump(stoichiometry, stioichiometry_b)
 
 # STEP3: Check for stoichiometry requirements
@@ -74,8 +87,8 @@ else:
 #    raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
 
 
-one = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XA.pdb")
-two = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XB.pdb")
+# one = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XA.pdb")
+# two = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XB.pdb")
 
 def test(pair_one, pair_two):
 
