@@ -4,14 +4,10 @@ import sys
 import arguments
 import utils
 import exceptions
-import Bio.PDB as pdb
 import copy
 import random
-import re
 import pickle
 
-
-line = "-------------------------------------"
 
 # STEP 1: parse the arguments
 options = arguments.read_args()
@@ -29,7 +25,8 @@ chains = {}
 pairs = []
 structures = {}
 similar_chains = {}
-prefix = options.input
+directory = options.input.strip().split("/")[-2]
+prefix = "resume/"+directory
 if options.resume:
     try:
         chains = pickle.load(open(prefix + "_chains.p", "rb"))
@@ -44,8 +41,6 @@ if options.resume:
         print("Similar Chains:\n"+str(similar_chains))
         print("Sto: " + str(stoichiometry))
         print("structures: \n" + str(structures))
-        print(line)
-        print(line)
     except FileNotFoundError:
         pass
 
@@ -55,7 +50,7 @@ else:
     for file in input_files:
         paired_chains = []
         structure = utils.get_structure(file, remove_het = True)
-        for chain in utils.get_chain_from_structure(structure, remove_het = True):
+        for chain in utils.get_chains_from_structure(structure, remove_het = True):
             chain_id = str(chain_index)+"_"+str(chain.id)
             chains[chain_id] = chain
             chain.id = chain_id
@@ -71,8 +66,6 @@ else:
     print("Similar Chains:\n"+str(similar_chains))
     print("Sto: " + str(stoichiometry))
     print("structures: \n" + str(structures))
-    print(line)
-    print(line)
     chains_b = open(prefix + "_chains.p", "wb")
     pairs_b = open(prefix + "_pairs.p", "wb")
     similar_chains_b = open(prefix + "_similar_chains.p", "wb")
@@ -98,11 +91,8 @@ def construct_complex(current_complex_real, chains,
     current_complex = copy.deepcopy(current_complex_real)
     used_pairs = copy.deepcopy(used_pairs_real)
 
-
-    # current_complex is a list of chains
     # for the first round its going to be a random pair of chains.
     if current_complex is None:
-        print(line)
         random_choice_id = random.choice(list(structures.keys()))
         random_choice = structures[random_choice_id]
         print("First case: beginning with "+ str(random_choice_id))
@@ -118,19 +108,16 @@ def construct_complex(current_complex_real, chains,
             print("Comparing chain : " + str(chain_in_current_complex))
             ps = utils.get_possible_structures(chain_in_current_complex,
                                                similar_chains, structures, used_pairs)
-            print("Possible structures : "+ str(ps))
-            print("Len ps!!! "+ str(len(ps)))
-            for i in ps:
-                print("iteration : "+ i )
-
+            print("Possible structures : "+str(ps))
+            if len(ps) == 0 and options.stoichiometry is None:
+                complexes_found.append(current_complex)
+                return
             for similar_chain_id in ps:
-
                 structure_id = ps[similar_chain_id]
                 structure_to_superimpose = structures[structure_id]
                 other = [tuple_id for tuple_id in structure_id if tuple_id != similar_chain_id][0]
                 print("similar_chain_id " + str(similar_chain_id))
                 print("Other (to superimpose) : " + other)
-
                 print("Superimposing")
                 print("Structure to superimpose: "+ str(structure_to_superimpose))
                 # Superimpose current complex with one of the possible structures.
@@ -142,18 +129,19 @@ def construct_complex(current_complex_real, chains,
                 print("Used pairs : " + str(used_pairs))
                 ## Check if finished!
                 if current_complex is not None:
-                    for chain in utils.get_chain_from_structure(current_complex):
+                    for chain in utils.get_chains_from_structure(current_complex):
                         print("Chain id: " + str(chain.id) + " --> " + str(chain))
-                    if utils.complex_fits_stoich(current_complex,stoichiometry):
-                        print(line)
+                    if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
                         print("Recursion Finished!")
-                        for chain in utils.get_chain_from_structure(current_complex):
+                        for chain in utils.get_chains_from_structure(current_complex):
                             print(chain)
                         complexes_found.append(current_complex)
 
                         return
                     else:
-                        print("getting here!")
+
+                        #elif --> add repeated!
+
                         construct_complex(current_complex, chains,
                                           similar_chains, stoichiometry, pairs,
                                           structures, used_pairs)
@@ -165,8 +153,7 @@ test_complex = construct_complex(None, chains, similar_chains,
 # Step5: Filter the good ones
 
 # Step6 : write output file
-#utils.write_structure_into_pdb(test_complex[0], 'test.pdb')
 index_file = 0
 for complex in complexes_found:
     index_file += 1
-    utils.write_structure_into_mmcif(complex, "output"+str(index_file)+".cif")
+    utils.write_structure_into_file(complex, "results/output"+str(index_file)+".cif", "mmcif")
