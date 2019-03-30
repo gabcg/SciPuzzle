@@ -7,6 +7,84 @@ import itertools
 import exceptions
 import copy
 import __main__ as main
+import pickle
+
+
+def reload(options):
+    """
+    Returns a list with data needed for running the program by reading the
+    binary files created by pickle.
+    """
+    chains = pickle.load(open(options.input + "_chains.p", "rb"))
+    pairs = pickle.load(open(options.input + "_pairs.p", "rb"))
+    similar_chains = pickle.load(open(options.input + "_similar_chains.p", "rb"))
+    structures = pickle.load(open(options.input + "_structures.p", "rb"))
+
+    if options.verbose:
+        print("The following structures have been recovered:")
+        print("Chains: \n" + str(chains))
+        print("Paired chains: \n"+str(pairs))
+        print("Similar Chains:\n"+str(similar_chains))
+        print("structures: \n" + str(structures))
+
+    return [chains, pairs, similar_chains, structures]
+
+
+def get_information(input_files, options):
+    """
+    Gets the possible structures for the macrocomplex construction.
+
+    It gets each pair of chains from each file, constructing a chain ID. Once
+    completed, the following structures are created:
+
+    - A dictionary with the ID as key and the chain as value.
+    - A list with sublists that contain IDs by pairs.
+
+    After that, similar chains are gotten from the dictionary, generating a
+    dictionary with key: ID and values: similar chains' IDs.
+
+    At the end, the unneeded chains are removed.
+    """
+
+    chains = {}
+    pairs = []
+    structures = {}
+    chain_index = 1
+    for file in input_files:
+        paired_chains = []
+        structure = get_structure(file, remove_het=True)
+        for chain in get_chain_from_structure(structure, remove_het=True):
+            chain_id = str(chain_index)+"_"+str(chain.id)
+            chains[chain_id] = chain
+            chain.id = chain_id
+            paired_chains.append(chain_id)
+        pairs.append(paired_chains)
+        structures[tuple(paired_chains)] = structure
+        chain_index += 1
+    similar_chains = get_similar_chains(chains)
+    (chains, similar_chains, pairs) = remove_useless_chains(chains,
+                                                            similar_chains,
+                                                            pairs)
+
+    if options.verbose:
+        print("Chains: \n" + str(chains))
+        print("Paired chains: \n"+str(pairs))
+        print("Similar Chains:\n"+str(similar_chains))
+        print("structures: \n" + str(structures))
+
+    # Save everything to binary files to be able to reload.
+
+    chains_backup = open(options.input + "_chains.p", "wb")
+    pairs_backup = open(options.input + "_pairs.p", "wb")
+    similar_chains_backup = open(options.input + "_similar_chains.p", "wb")
+    structures_backup = open(options.input + "_structures.p", "wb")
+
+    pickle.dump(chains, chains_backup)
+    pickle.dump(pairs, pairs_backup)
+    pickle.dump(similar_chains, similar_chains_backup)
+    pickle.dump(structures, structures_backup)
+
+    return [chains, pairs, similar_chains, structures]
 
 
 def chain_to_fasta(chain):
