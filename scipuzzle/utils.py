@@ -157,13 +157,14 @@ def get_chain(structure, chain_id):
                 return chain
 
 
-def get_possible_structures(chain_in_current_complex, similar_chains, structures):
+def get_possible_structures(chain_in_current_complex, similar_chains, structures, used_pairs):
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
         for sim_chain in similar_chains[chain_in_current_complex]:
             for tuple_key in structures:
                 if sim_chain in tuple_key:
-                    possible_structures[sim_chain] = (tuple_key)
+                    if tuple_key not in used_pairs:
+                        possible_structures[sim_chain] = (tuple_key)
     return possible_structures
 
 
