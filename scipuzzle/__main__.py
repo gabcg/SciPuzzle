@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import arguments
+import interface
 import utils
 import exceptions
 import Bio.PDB as pdb
@@ -13,6 +14,9 @@ line = "-------------------------------------"
 
 # Step 1: parse the arguments
 options = arguments.read_args()
+if options.gui:
+    options = interface.gui()
+
 input_files = arguments.get_input_files(options.input)
 stoichiometry = None
 if options.stoichiometry is not None:
@@ -149,10 +153,22 @@ def construct_complex(current_complex_real, chains,
             #         else:
             #             print("already in used pairs")
 
-
 test_complex = construct_complex(None, chains, similar_chains,
                                  stoichiometry, pairs, structures, [])
+
+
 # Step5: Filter the good ones
 
 # Step6 : write output file
-#utils.write_structure_into_pdb(test_complex[0], 'test.pdb')
+utils.write_structure_into_pdb(test_complex[0], 'test2.pdb')
+
+# Step 7 (optional): open models in Chimera
+
+# Need to store the outputs as a list
+models = ['test.pdb']
+if options.open_chimera:
+    utils.open_in_chimera(models)
+
+# if output is a directory:
+# if options.open_chimera:
+#     utils.open_in_chimera(options.output)

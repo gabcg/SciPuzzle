@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+import os
 import sys
 import Bio.PDB as pdb
 from Bio import pairwise2
@@ -92,7 +94,7 @@ def get_information(input_files, options):
 
 def chain_to_fasta(chain):
     """
-    Extracts the fasta sequence from a PDB file and returns a String
+    Extracts the fasta sequence from a PDB file and returns a string
     containing the extracted sequence.
     """
     ppb = pdb.PPBuilder()
@@ -142,11 +144,11 @@ def get_chains(input_file):
 def get_similar_chains(chains, sequence_identity_threshold=0.95):
     """
     Compute which chains are similar to which ones given a dictionary having
-    chain ids as keys and chain objects as values.
-    Returns a dictionary containing informations about which chains are similar
+    chain ID's as keys and chain objects as values.
+    Returns a dictionary containing information about which chains are similar
     to which chains, according to the sequence_identity_threshold.
-    Specifically the dictionary has as keys all chain ids and as values all the
-    chains that are similar to the key chain.
+    Specifically the dictionary has as keys all chain ID's and as values all
+    the chains that are similar to the key chain.
     """
     print("Testing get similar chains")
     similar_chains = {}
@@ -390,3 +392,17 @@ def complex_fits_stoich(complex, stoichiometry):
         return True
     else:
         return False
+
+
+def open_in_chimera(models):
+    for model in models:
+        sys.stderr.write('Opening model %s in Chimera' % model)
+        os.system('chimera' + model)
+
+# If output is a directory
+
+# def open_in_chimera(directory):
+#     for file in os.listdir(directory):
+#         if file.endswith('.pdb'):
+#             sys.stderr.write('Opening model %s in Chimera' % file)
+#             os.system('chimera' + file)
