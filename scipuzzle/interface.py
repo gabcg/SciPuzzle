@@ -4,7 +4,7 @@
 from gooey import Gooey, GooeyParser
 
 desc = """
-Recreates a macrocomplex given different pdb
+Recreates a macrocomplex given different PDB
 files containing interacting protein pairs."""
 
 
@@ -15,14 +15,14 @@ def gui():
     parser.add_argument('-i', '--input', dest="input",
                         action="store",
                         default=None,
-                        help="Input Folder containing PDB formatted files",
+                        help="Input directory containing PDB formatted files",
                         required=True,
                         widget="DirChooser",
                         metavar="Input (-i)")
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
-                        default="reconstructed_macrocomplex.pdb",
-                        help="PDB formatted outputfile",
+                        default="",
+                        help="Output directory",
                         widget="DirChooser",
                         metavar="Output (-o)")
     # If we want the output to be a dir, then the model files need a prefix
@@ -44,7 +44,8 @@ def gui():
     parser.add_argument('-r', '--resume', dest="resume",
                         action="store_true",
                         default=False,
-                        help="Resume the program after a crash",
+                        help="Resume the program after a crash or when using \
+                        a different stoichiometry",
                         metavar="Resume (-r)")
     parser.add_argument('-c', '--chimera', dest="open_chimera",
                         action="store_true",

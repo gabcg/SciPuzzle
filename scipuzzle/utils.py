@@ -11,6 +11,7 @@ import copy
 import __main__ as main
 import pickle
 
+
 def resume(options):
     """
     Returns a list with data needed for running the program by reading the
@@ -28,66 +29,6 @@ def resume(options):
         sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
         sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
         sys.stderr.write("\tStructures: %s\n\n" % len(structures))
-
-    return (chains, pairs, similar_chains, structures)
-
-
-def get_information(input_files, options):
-    """
-    Gets the possible structures for the macrocomplex construction.
-
-    It gets each pair of chains from each file, constructing a chain ID. Once
-    completed, the following structures are created:
-
-    - A dictionary with the ID as key and the chain as value.
-    - A list with sublists that contain IDs by pairs.
-
-    After that, similar chains are gotten from the dictionary, generating a
-    dictionary with key: ID and values: similar chains' IDs.
-
-    At the end, the unneeded chains are removed.
-    """
-    chains = {}
-    pairs = []
-    structures = {}
-    chain_index = 1
-    for file in input_files:
-        paired_chains = []
-        structure = get_structure(file, remove_het=True)
-        for chain in get_chain_from_structure(structure, remove_het=True):
-            chain_id = str(chain_index)+"_"+str(chain.id)
-            chains[chain_id] = chain
-            chain.id = chain_id
-            paired_chains.append(chain_id)
-        pairs.append(paired_chains)
-        structures[tuple(paired_chains)] = structure
-        chain_index += 1
-    similar_chains = get_similar_chains(chains)
-    (chains, similar_chains, pairs) = remove_useless_chains(chains,
-                                                            similar_chains,
-                                                            pairs)
-
-    # Save everything to binary files to be able to resume.
-    if not os.path.exists('resume'):
-        os.makedirs('resume')
-    prefix = 'resume/' + options.input.split('/')[-1]
-    chains_backup = open(prefix + "_chains.p", "wb")
-    pairs_backup = open(prefix + "_pairs.p", "wb")
-    similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
-    structures_backup = open(prefix + "_structures.p", "wb")
-    pickle.dump(chains, chains_backup)
-    pickle.dump(pairs, pairs_backup)
-    pickle.dump(similar_chains, similar_chains_backup)
-    pickle.dump(structures, structures_backup)
-
-    if options.verbose:
-        sys.stderr.write("The analysis of the input results in:\n")
-        sys.stderr.write("\tChains: %s\n" % len(chains))
-        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
-        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
-        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
-        sys.stderr.write("Resume files have been saved in %s/resume\n"
-                         % os.getcwd())
 
     return (chains, pairs, similar_chains, structures)
 
@@ -137,8 +78,6 @@ def get_chains(input_file):
                 chain.detach_child(heteroatom.id)
             chains.append(chain)
     return chains
-
-
 
 
 def get_similar_chains(chains, sequence_identity_threshold=0.95):
@@ -219,7 +158,7 @@ def are_clashing(chain_one, chain_two, max_clashes=50, contact_distance=1.0):
     return False
 
 
-def get_chains_from_structure(structure, remove_het = False):
+def get_chains_from_structure(structure, remove_het=False):
     """
     Creates a list of chains out of a given structure.
     If remove_het is set to true, the heteroatoms are removed from the chain.
@@ -286,8 +225,8 @@ def remove_chain(structure, chain_id):
 
 def superimpose_chains_test(chain_one_real, chain_two_real):
     """
-    Superimposes two structures and returns the superimposed structure and the rmsd
-    of the superimposition.
+    Superimposes two structures and returns the superimposed structure and the
+    RMSD of the superimposition.
     """
     chain_one = copy.deepcopy(chain_one_real)
     chain_two = copy.deepcopy(chain_two_real)
@@ -314,8 +253,8 @@ def print_chain_in_structure(structure):
 
 def superimpose_chains(chain_one_real, chain_two_real):
     """
-    Superimposes two structures and returns the superimposed structure and the rmsd
-    of the superimposition.
+    Superimposes two structures and returns the superimposed structure and the
+    RMSD of the superimposition.
     """
     chain_one = copy.deepcopy(chain_one_real)
     chain_two = copy.deepcopy(chain_two_real)
@@ -387,6 +326,66 @@ def open_in_chimera(models):
     for model in models:
         sys.stderr.write('Opening model %s in Chimera' % model)
         os.system('chimera' + model)
+
+
+def get_information(input_files, options):
+    """
+    Gets the possible structures for the macrocomplex construction.
+
+    It gets each pair of chains from each file, constructing a chain ID. Once
+    completed, the following structures are created:
+
+    - A dictionary with the ID as key and the chain as value.
+    - A list with sublists that contain IDs by pairs.
+
+    After that, similar chains are gotten from the dictionary, generating a
+    dictionary with key: ID and values: similar chains' IDs.
+
+    At the end, the unneeded chains are removed.
+    """
+    chains = {}
+    pairs = []
+    structures = {}
+    chain_index = 1
+    for file in input_files:
+        paired_chains = []
+        structure = get_structure(file, remove_het=True)
+        for chain in get_chains_from_structure(structure, remove_het=True):
+            chain_id = str(chain_index)+"_"+str(chain.id)
+            chains[chain_id] = chain
+            chain.id = chain_id
+            paired_chains.append(chain_id)
+        pairs.append(paired_chains)
+        structures[tuple(paired_chains)] = structure
+        chain_index += 1
+    similar_chains = get_similar_chains(chains)
+    (chains, similar_chains, pairs) = remove_useless_chains(chains,
+                                                            similar_chains,
+                                                            pairs)
+
+    # Save everything to binary files to be able to resume.
+    if not os.path.exists('resume'):
+        os.makedirs('resume')
+    prefix = 'resume/' + options.input.split('/')[-1]
+    chains_backup = open(prefix + "_chains.p", "wb")
+    pairs_backup = open(prefix + "_pairs.p", "wb")
+    similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
+    structures_backup = open(prefix + "_structures.p", "wb")
+    pickle.dump(chains, chains_backup)
+    pickle.dump(pairs, pairs_backup)
+    pickle.dump(similar_chains, similar_chains_backup)
+    pickle.dump(structures, structures_backup)
+
+    if options.verbose:
+        sys.stderr.write("The analysis of the input results in:\n")
+        sys.stderr.write("\tChains: %s\n" % len(chains))
+        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
+        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
+        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
+        sys.stderr.write("Resume files have been saved in %s/resume\n"
+                         % os.getcwd())
+
+    return (chains, pairs, similar_chains, structures)
 
 # If output is a directory
 
