@@ -8,6 +8,7 @@ import Bio.PDB as pdb
 import copy
 import random
 import re
+import pickle
 
 
 line = "-------------------------------------"
@@ -24,32 +25,49 @@ if options.verbose:
     for file in input_files:
         sys.stderr.write(file+"\n")
 
-# STEP2: Get possible structures for Macrocomplex construction and skip others
-chains = {}
-pairs = []
-structures = {}
-chain_index = 1
-for file in input_files:
-    paired_chains = []
-    structure = utils.get_structure(file, remove_het = True)
-    for chain in utils.get_chain_from_structure(structure, remove_het = True):
-        chain_id = str(chain_index)+"_"+str(chain.id)
-        chains[chain_id] = chain
-        chain.id = chain_id
-        paired_chains.append(chain_id)
-    pairs.append(paired_chains)
-    structures[tuple(paired_chains)] = structure
-    chain_index += 1
-similar_chains = utils.get_similar_chains(chains)
-(chains, similar_chains, pairs) = utils.remove_useless_chains(chains, similar_chains, pairs)
+if options.resume:
+    chains = pickle.load(open("chains.p", "rb"))
+    pairs = pickle.load(open("pairs.p", "rb"))
+    similar_chains = pickle.load(open("similar_chains.p", "rb"))
+    stoichiometry =pickle.load(open("stoichiometry.p", "rb"))
+else:
+    # STEP2: Get possible structures for Macrocomplex construction and skip others
+    chains = {}
+    pairs = []
+    structures = {}
+    chain_index = 1
+    for file in input_files:
+        paired_chains = []
+        structure = utils.get_structure(file, remove_het = True)
+        for chain in utils.get_chain_from_structure(structure, remove_het = True):
+            chain_id = str(chain_index)+"_"+str(chain.id)
+            chains[chain_id] = chain
+            chain.id = chain_id
+            paired_chains.append(chain_id)
+        pairs.append(paired_chains)
+        structures[tuple(paired_chains)] = structure
+        chain_index += 1
+    similar_chains = utils.get_similar_chains(chains)
+    (chains, similar_chains, pairs) = utils.remove_useless_chains(chains, similar_chains, pairs)
 
-print("Chains: \n" + str(chains))
-print("Paired chains: \n"+str(pairs))
-print("Similar Chains:\n"+str(similar_chains))
-print("Sto: " + str(stoichiometry))
-print("structures: \n" + str(structures))
-print(line)
-print(line)
+    print("Chains: \n" + str(chains))
+    print("Paired chains: \n"+str(pairs))
+    print("Similar Chains:\n"+str(similar_chains))
+    print("Sto: " + str(stoichiometry))
+    print("structures: \n" + str(structures))
+    print(line)
+    print(line)
+
+    if options.allow_resume:
+        chains_b = open("chains.p", "wb")
+        pairs_b = open("pairs.p", "wb")
+        similar_chains_b = open("similar_chains.p", "wb")
+        stioichiometry_b = open("stoichiometry.p", "wb")
+
+        pickle.dump(chains, chains_b)
+        pickle.dump(pairs, pairs_b)
+        pickle.dump(similar_chains, similar_chains_b)
+        pickle.dump(stoichiometry, stioichiometry_b)
 
 # STEP3: Check for stoichiometry requirements
 # if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
