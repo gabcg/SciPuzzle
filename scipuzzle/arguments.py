@@ -14,8 +14,7 @@ def read_args():
     parser.add_argument('-i', '--input', dest="input",
                         action="store",
                         default=None,
-                        help="Input Folder containing PDB formatted files",
-                        required=True)
+                        help="Input Folder containing PDB formatted files")
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
                         default="reconstructed_macrocomplex.pdb",
@@ -28,10 +27,14 @@ def read_args():
                         action="store_true",
                         default=False,
                         help="Verbose Mode")
-    parser.add_argument('-r', '--resume', dest="verbose",
+    parser.add_argument('-ar', '--allow_resume', dest="allow_resume",
                         action="store_true",
                         default=False,
-                        help="Verbose Mode")
+                        help="Reload some structures if the program crashes")
+    parser.add_argument('-r', '--resume', dest="resume",
+                        action="store_true",
+                        default=False,
+                        help="Resume the program after a crash")
     options = parser.parse_args()
     return options
 
