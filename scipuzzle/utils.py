@@ -56,8 +56,6 @@ def get_chains(input_file):
     return chains
 
 
-
-
 def get_similar_chains(chains, sequence_identity_threshold=0.95):
     """
     Compute which chains are similar to which ones given a dictionary having
@@ -76,7 +74,8 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
-            (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
+            (superimposed, rmsd) = superimpose_chains(chains[chain_1],
+                                                      chains[chain_2])
             print(rmsd)
             if rmsd < 0.05:
                 if chain_1 not in similar_chains:
@@ -116,14 +115,14 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(chain_one, chain_two, max_clashes=50, contact_distance=1.0):
+def are_clashing(structure, chain, max_clashes=50, contact_distance=1.0):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
     Returns a boolean.
     """
-    atoms_one = [atom for atom in chain_one.get_atoms() if atom.get_id() == 'CA']
-    atoms_two = [atom for atom in chain_two.get_atoms() if atom.get_id() == 'CA']
+    atoms_one = [atom for atom in structure.get_atoms() if atom.get_id() == 'CA']
+    atoms_two = [atom for atom in chain.get_atoms() if atom.get_id() == 'CA']
     ns = pdb.NeighborSearch(atoms_one)
     clashes = 0
     for atom_two in atoms_two:
@@ -136,7 +135,7 @@ def are_clashing(chain_one, chain_two, max_clashes=50, contact_distance=1.0):
     return False
 
 
-def get_chain_from_structure(structure, remove_het = False):
+def get_chain_from_structure(structure, remove_het=False):
     chains = []
     for model in structure:
         for chain in model:
@@ -150,19 +149,23 @@ def get_chain_from_structure(structure, remove_het = False):
                 chains.append(chain)
     return chains
 
+
 def get_chain(structure, chain_id):
     for model in structure:
         for chain in model:
             if chain.id == chain_id:
                 return chain
 
-def get_possible_structures(chain_in_current_complex, similar_chains, structures):
+
+def get_possible_structures(chain_in_current_complex, similar_chains,
+                            structures, used_pairs):
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
         for sim_chain in similar_chains[chain_in_current_complex]:
             for tuple_key in structures:
                 if sim_chain in tuple_key:
-                    possible_structures[sim_chain] = (tuple_key)
+                    if tuple_key not in used_pairs:
+                        possible_structures[sim_chain] = (tuple_key)
     return possible_structures
 
 
@@ -182,8 +185,8 @@ def remove_chain(structure, chain_id):
 
 def superimpose_chains_test(chain_one_real, chain_two_real):
     """
-    Superimposes two structures and returns the superimposed structure and the rmsd
-    of the superimposition.
+    Superimposes two structures and returns the superimposed structure and the
+    rmsd of the superimposition.
     """
     chain_one = copy.deepcopy(chain_one_real)
     chain_two = copy.deepcopy(chain_two_real)
@@ -206,8 +209,8 @@ def print_chain_in_structure(structure):
 
 def superimpose_chains(chain_one_real, chain_two_real):
     """
-    Superimposes two structures and returns the superimposed structure and the rmsd
-    of the superimposition.
+    Superimposes two structures and returns the superimposed structure and the
+    rmsd of the superimposition.
     """
     chain_one = copy.deepcopy(chain_one_real)
     chain_two = copy.deepcopy(chain_two_real)
@@ -223,12 +226,10 @@ def superimpose_chains(chain_one_real, chain_two_real):
     return (chain_two, super_imposer.rms)
 
 
-
-
 def superimpose(structure_one_real, structure_two_real):
     """
-    Superimposes two structures and returns the superimposed structure and the rmsd
-    of the superimposition.
+    Superimposes two structures and returns the superimposed structure and the
+    rmsd of the superimposition.
     """
     structure_one = copy.deepcopy(structure_one_real)
     structure_two = copy.deepcopy(structure_two_real)
@@ -242,13 +243,6 @@ def superimpose(structure_one_real, structure_two_real):
     super_imposer.set_atoms(atoms_one, atoms_two)
     super_imposer.apply(list(structure_two[0].get_atoms()))
     return (structure_two, super_imposer.rms)
-
-
-def get_all_similar_pairs(pair, similar_chains, structures):
-
-    similar_pairs = []
-
-    return similar_pairs
 
 
 def superimpose_old(chain_one, chain_two):

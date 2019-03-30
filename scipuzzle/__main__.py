@@ -55,47 +55,6 @@ print(line)
 # if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
 #    raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
 
-
-one = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XA.pdb")
-two = utils.get_structure("/Users/luisasantus/Documents/GitHub/SciPuzzle/example_2/pair_his3_sc_XB.pdb")
-
-def test(pair_one, pair_two):
-
-    print("lala")
-    chains = {}
-    chain_index = 1
-    for chain in utils.get_chain_from_structure(pair_one):
-        chain_id = str(chain_index)+"_"+str(chain.id)
-        chain.id = chain_id
-        chains[chain_id] = chain
-    chain_index += 1
-    print("lala2")
-    for chain in utils.get_chain_from_structure(pair_two):
-        chain_id = str(chain_index)+"_"+str(chain.id)
-        chain.id = chain_id
-        chains[chain_id] = chain
-    similar_chains = utils.get_similar_chains(chains)
-    print("chains "+ str(chains))
-    print(similar_chains)
-
-    for c in utils.get_chain_from_structure(pair_one):
-        if c.id in similar_chains:
-            similar = similar_chains[c.id][0]
-            print(c.id)
-            print(similar)
-    for a in utils.get_chain_from_structure(pair_two):
-        if similar != a.id:
-            other = a.id
-    print("pther "+ other)
-
-    matrix = utils.superimpose_chains_test(utils.get_chain(pair_one,c.id),utils.get_chain(pair_two, similar))
-    matrix.apply(utils.get_chain(pair_two,other))
-    #(superimposed, rmsd) = utils.superimpose(pair_one,pair_two)
-    utils.write_structure_into_mmcif(pair_one, "test1.cif")
-    utils.write_structure_into_mmcif(pair_two, "test2.cif")
-#test(one,two)
-
-print("going further ")
 # STEP4: Begin Macrocomplex reconstruction!
 def construct_complex(current_complex_real, chains,
                       similar_chains, stoichiometry, pairs,
@@ -135,19 +94,22 @@ def construct_complex(current_complex_real, chains,
         print("Comparing chain : " + str(chain_in_current_complex))
         print("similar_chains: "+ str(similar_chains))
         ps = utils.get_possible_structures(chain_in_current_complex,
-                                           similar_chains, structures)
+                                           similar_chains, structures, used_pairs)
         print("Possible structures : "+ str(ps))
         for similar_chain_id in ps:
             structure_id = ps[similar_chain_id]
             structure_to_superimpose = structures[structure_id]
             print("Superimposing")
             print("Structure to superimpose: "+ str(structure_to_superimpose))
+            print("struc to superimpose:" + str(similar_chain_id))
             # Superimpose current complex with one of the possible structures.
             matrix = utils.superimpose_chains_test(utils.get_chain(current_complex,chain_in_current_complex)
                                                   ,utils.get_chain(structure_to_superimpose, similar_chain_id))
             other = [tuple_id for tuple_id in structure_id if tuple_id != similar_chain_id][0]
+            print("chain to add:" + str(other))
             matrix.apply(utils.get_chain(structure_to_superimpose,other))
-            current_complex[0].add(utils.get_chain(structure_to_superimpose,other))
+            if not utils.are_clashing(current_complex, utils.get_chain(structure_to_superimpose,other)):
+                current_complex[0].add(utils.get_chain(structure_to_superimpose,other))
             used_pairs.append(structure_id)
             construct_complex(current_complex, chains,
                               similar_chains, stoichiometry, pairs,
