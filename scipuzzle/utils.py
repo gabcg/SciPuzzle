@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+import os
 import sys
 import Bio.PDB as pdb
 from Bio import pairwise2
@@ -7,11 +9,33 @@ import itertools
 import exceptions
 import copy
 import __main__ as main
+import pickle
+
+
+def resume(options):
+    """
+    Returns a list with data needed for running the program by reading the
+    binary files created by pickle.
+    """
+    prefix = 'resume/' + options.input.split('/')[-1]
+    chains = pickle.load(open(prefix + "_chains.p", "rb"))
+    pairs = pickle.load(open(prefix + "_pairs.p", "rb"))
+    similar_chains = pickle.load(open(prefix + "_similar_chains.p", "rb"))
+    structures = pickle.load(open(prefix + "_structures.p", "rb"))
+
+    if options.verbose:
+        sys.stderr.write("The following structures have been recovered:\n")
+        sys.stderr.write("\tChains: %s\n" % len(chains))
+        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
+        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
+        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
+
+    return (chains, pairs, similar_chains, structures)
 
 
 def chain_to_fasta(chain):
     """
-    Extracts the fasta sequence from a PDB file and returns a String
+    Extracts the fasta sequence from a PDB file and returns a string
     containing the extracted sequence.
     """
     ppb = pdb.PPBuilder()
@@ -59,11 +83,11 @@ def get_chains(input_file):
 def get_similar_chains(chains, sequence_identity_threshold=0.95):
     """
     Compute which chains are similar to which ones given a dictionary having
-    chain ids as keys and chain objects as values.
-    Returns a dictionary containing informations about which chains are similar
+    chain ID's as keys and chain objects as values.
+    Returns a dictionary containing information about which chains are similar
     to which chains, according to the sequence_identity_threshold.
-    Specifically the dictionary has as keys all chain ids and as values all the
-    chains that are similar to the key chain.
+    Specifically the dictionary has as keys all chain ID's and as values all
+    the chains that are similar to the key chain.
     """
 
     similar_chains = {}
@@ -133,7 +157,7 @@ def are_clashing(structure, chain, max_clashes=100, contact_distance=1.0):
     return False
 
 
-def get_chains_from_structure(structure, remove_het = False):
+def get_chains_from_structure(structure, remove_het=False):
     """
     Creates a list of chains out of a given structure.
     If remove_het is set to true, the heteroatoms are removed from the chain.
@@ -185,13 +209,6 @@ def get_chain_ids_from_structure(structure):
 
 
 
-def complexes_are_equal(structure1, structure2):
-    chain_ids_one = get_chain_ids_from_structure(structure1)
-    chain_ids_two = get_chain_ids_from_structure(structure2)
-
-
-
-
 def add_chain(structure, chain_real):
     chain = copy.deepcopy(chain_real)
     chains_ids = get_chain_ids_from_structure(structure)
@@ -209,8 +226,6 @@ def modify_ids_first_pair(structure, mapping_chain_ids, used_pairs):
     chains[0].id = 'A'
     chains[1].id = 'B'
     used_pairs.append(())
-
-
 
 def add_chain_to_structure(complex, chain_real, possible_ids, mapping_chain_ids):
     chain = copy.deepcopy(chain_real)
@@ -233,6 +248,7 @@ def get_possible_structures(chain_in_current_complex, similar_chains,
                     if tuple_key not in used_pairs :
                         if tuple_key not in clashing:
                             possible_structures[sim_chain] = (tuple_key)
+
     return possible_structures
 
 
@@ -262,7 +278,7 @@ def remove_chain(structure, chain_id):
 def superimpose_chains_test(chain_one_real, chain_two_real):
     """
     Superimposes two structures and returns the superimposed structure and the
-    rmsd of the superimposition.
+    RMSD of the superimposition.
     """
     chain_one = copy.deepcopy(chain_one_real)
     chain_two = copy.deepcopy(chain_two_real)
@@ -290,7 +306,7 @@ def print_chain_in_structure(structure):
 def superimpose_chains(chain_one_real, chain_two_real):
     """
     Superimposes two structures and returns the superimposed structure and the
-    rmsd of the superimposition.
+    RMSD of the superimposition.
     """
     chain_one = copy.deepcopy(chain_one_real)
     chain_two = copy.deepcopy(chain_two_real)
@@ -374,3 +390,78 @@ def complex_fits_stoich(complex, stoichiometry):
         return True
     else:
         return False
+
+
+def get_information(input_files, options):
+    """
+    Gets the possible structures for the macrocomplex construction.
+
+    It gets each pair of chains from each file, constructing a chain ID. Once
+    completed, the following structures are created:
+
+    - A dictionary with the ID as key and the chain as value.
+    - A list with sublists that contain IDs by pairs.
+
+    After that, similar chains are gotten from the dictionary, generating a
+    dictionary with key: ID and values: similar chains' IDs.
+
+    At the end, the unneeded chains are removed.
+    """
+    chains = {}
+    pairs = []
+    structures = {}
+    chain_index = 1
+    for file in input_files:
+        paired_chains = []
+        structure = get_structure(file, remove_het=True)
+        for chain in get_chains_from_structure(structure, remove_het=True):
+            chain_id = str(chain_index)+"_"+str(chain.id)
+            chains[chain_id] = chain
+            chain.id = chain_id
+            paired_chains.append(chain_id)
+        pairs.append(paired_chains)
+        structures[tuple(paired_chains)] = structure
+        chain_index += 1
+    similar_chains = get_similar_chains(chains)
+    (chains, similar_chains, pairs) = remove_useless_chains(chains,
+                                                            similar_chains,
+                                                            pairs)
+
+    # Save everything to binary files to be able to resume.
+    if not os.path.exists('resume'):
+        os.makedirs('resume')
+    prefix = 'resume/' + options.input.split('/')[-1]
+    chains_backup = open(prefix + "_chains.p", "wb")
+    pairs_backup = open(prefix + "_pairs.p", "wb")
+    similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
+    structures_backup = open(prefix + "_structures.p", "wb")
+    pickle.dump(chains, chains_backup)
+    pickle.dump(pairs, pairs_backup)
+    pickle.dump(similar_chains, similar_chains_backup)
+    pickle.dump(structures, structures_backup)
+
+    if options.verbose:
+        sys.stderr.write("The analysis of the input results in:\n")
+        sys.stderr.write("\tChains: %s\n" % len(chains))
+        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
+        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
+        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
+        sys.stderr.write("Resume files have been saved in %s/resume\n"
+                         % os.getcwd())
+
+    return (chains, pairs, similar_chains, structures)
+
+
+def open_in_chimera(directory, options):
+    """
+    Opens all the models in Chimera if the user specified it. Works with Linux
+    and macOS.
+    """
+    for file in os.listdir(directory):
+        if file.endswith('.pdb'):
+            if options.verbose:
+                sys.stderr.write('Opening model %s in Chimera' % file)
+            if sys.platform == 'darwin':
+                os.system('/Applications/Chimera.app/Contents/MacOS/chimera' + file)
+            else:
+                os.system('chimera' + file)
