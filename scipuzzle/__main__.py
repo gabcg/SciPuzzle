@@ -7,8 +7,7 @@ import exceptions
 import copy
 import random
 import pickle
-import global_vars
-
+from global_vars import *
 # STEP 1: parse the arguments
 options = arguments.read_args()
 input_files = arguments.get_input_files(options.input)
@@ -17,12 +16,7 @@ if options.stoichiometry is not None:
     stoichiometry = arguments.parse_stoichiometry(options.stoichiometry)
 if options.verbose:
     utils.options = options
-    sys.stderr.write("\n\n-------------------------------\n")
-    sys.stderr.write("--  Welcome to SciPuzzle! ;) --\n")
-    sys.stderr.write("-------------------------------\n")
-    sys.stderr.write("\n\nInput correctly parsed.\nFiles used as input:\n")
-    for file in input_files:
-        sys.stderr.write(file+"\n")
+    write_welcoming(input_files)
 
 chains = {}
 pairs = []
@@ -80,19 +74,14 @@ else:
     pickle.dump(structures, structures_b)
         # pickle.dump(stoichiometry, stioichiometry_b)
 
-# STEP3: Check for stoichiometry requirements
-# if not utils.stoichiometry_is_possible(stoichiometry, chains, similar_chains):
-#    raise exceptions.IncorrectStoichiometry(stoichiometry=stoichiometry)
-
 
 complexes_found = []
-temp_complexes = []
 if options.verbose:
     sys.stderr.write("\n# Beginning to construct the complex\n\n")
 # STEP4: Begin Macrocomplex reconstruction!
 def construct_complex(current_complex_real,
                       similar_chains, stoichiometry,
-                      structures, used_pairs_real, clashing_real,old_complex_real ):
+                      structures, used_pairs_real, clashing_real,old_complex_real):
     # bruteforce ending!
     current_complex = copy.deepcopy(current_complex_real)
     used_pairs = copy.deepcopy(used_pairs_real)
@@ -120,7 +109,7 @@ def construct_complex(current_complex_real,
             print("new chain "+ str(new_chain))
             ps = utils.get_possible_structures(chain_in_current_complex,
                                                similar_chains, structures, used_pairs, clashing, new_chain)
-            print("Possible structures : "+ str(ps))
+            print("Possible structures : "+str(ps))
             if len(ps) == 0 and options.stoichiometry is None:
                 if options.verbose:
                     sys.stderr.write("Complex built!! :)\n")
@@ -155,7 +144,6 @@ def construct_complex(current_complex_real,
                     "2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                     break
                     return
-
                 structure_id = ps[similar_chain_id]
                 print('chain in current complex '+ str(chain_in_current_complex))
                 print("similar_chain_id "+ str(similar_chain_id))
@@ -207,9 +195,6 @@ def construct_complex(current_complex_real,
                         if len(complexes_found) == 1:
                             print("skldjhgsalfjhgskdjhfgkajsdhfgkasdhjfgsdafkjhsad!!!!!!")
                             return
-
-
-
 
 
 test_complex = construct_complex(None, similar_chains,
