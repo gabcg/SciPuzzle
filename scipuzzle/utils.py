@@ -94,6 +94,7 @@ def get_information(input_files, options):
         sys.stderr.write("\tStructures: %s\n\n" % len(structures))
         sys.stderr.write("Resume files have been saved in %s/resume\n"
                          % os.getcwd())
+        sys.stderr.write("-------------------------------\n\n\n")
 
     return (chains, pairs, similar_chains, structures)
 
@@ -153,19 +154,6 @@ def remove_heteroatoms(chain):
     for heteroatom in heteroatoms:
         chain.detach_child(heteroatom.id)
 
-##???
-def get_chain_permissive(structure, chain_id):
-    """
-    Extract a specific chain from a structure given a specified chain id.
-    Returns a chain object.
-    """
-    for chain in get_chains_from_structure(structure):
-        if chain.id == chain_id:
-            return chain
-        elif chain_id in chain.id:
-            print("000000000000000000  COMING IN THIS ")
-            return chain
-
 
 def get_chain(structure, chain_id):
     """
@@ -222,9 +210,9 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
-            (superimposed, rmsd) = superimpose_chains(chains[chain_1],
-                                                      chains[chain_2])
-            if rmsd < 0.05:
+            # (superimposed, rmsd) = superimpose_chains(chains[chain_1],
+            #                                           chains[chain_2])
+            # if rmsd < 0.05:
                 if chain_1 not in similar_chains:
                     similar_chains[chain_1] = []
                 if chain_2 not in similar_chains:
@@ -312,20 +300,18 @@ def get_possible_structures(chain_in_current_complex, similar_chains,
         for sim_chain in similar_chains[chain_in_current_complex]:
             for tuple_key in structures:
                 if sim_chain in tuple_key:
-                    print(tuple_key)
-                    print(used_pairs)
                     if tuple_key not in used_pairs:
                         if tuple_key not in clashing:
                             possible_structures[sim_chain] = (tuple_key)
     return possible_structures
 
 
-def complex_is_ready(complex, stoichiometry):
+def complex_is_ready(complex, nc):
     """
     Checks if the number of chains in the complex is the same as the maximum
     number of chains desired.
     """
-    if len(get_chains_from_structure(complex)) == sum(stoichiometry.values()):
+    if len(get_chains_from_structure(complex)) == nc:
         return True
     else:
         return False

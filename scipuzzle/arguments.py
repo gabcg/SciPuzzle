@@ -24,10 +24,10 @@ def read_args():
                         action="store",
                         default='model',
                         help="Ouput name")
-    parser.add_argument('-s', '--stoichiometry', dest="stoichiometry",
+    parser.add_argument('-nc', '--number_chains', dest="nc",
                         action="store",
                         default=None,
-                        help="Stoichiometry")
+                        help="Maximum number of chains")
     parser.add_argument('-v', '--verbose', dest="verbose",
                         action="store_true",
                         default=False,
@@ -36,7 +36,7 @@ def read_args():
                         action="store_true",
                         default=False,
                         help="Resume the program after a crash or when using \
-                        a different stoichiometry")
+                        a different number of chains")
     parser.add_argument('-c', '--chimera', dest="open_chimera",
                         action="store_true",
                         default=False,
@@ -67,19 +67,3 @@ def get_input_files(input):
     else:
         input_files = eval(input)
     return input_files
-
-
-def parse_stoichiometry(stoichiometry):
-    """
-    Parses the String containing the Stioichiometry instructions and returns
-    a dictionary.
-
-    e.g. A3B12C1 --> {'A':3, 'B':12, 'C':1}
-    """
-    if stoichiometry is None:
-        return None
-    else:
-        sto_dict = dict(re.findall("(\w)(\d*)", stoichiometry))
-        for key in sto_dict:
-            sto_dict[key] = int(sto_dict[key])
-        return sto_dict
