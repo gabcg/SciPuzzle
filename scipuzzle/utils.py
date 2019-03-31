@@ -7,7 +7,7 @@ import Bio.PDB as pdb
 from Bio import pairwise2
 import itertools
 import copy
-import __main__ as main
+import scipuzzle.__main__ as main
 import pickle
 
 
@@ -331,7 +331,7 @@ def complex_differ(structure_one, structure_two):
 # ----------------------------
 def write_structure_into_file(structure, name, format):
     """
-    Writes the strcuture into a file. The file can be either a pdb or a mmcif.
+    Writes the strucuture into a file. The file can be either a pdb or a mmcif.
     Format needs to be either "pdb" or "mmcif" depending on the desired output
     file.
     """
@@ -343,7 +343,7 @@ def write_structure_into_file(structure, name, format):
     io.save(name)
 
 
-def open_in_chimera(directory, options):
+def open_in_chimera(options):
     """
     Opens all the models in Chimera if the user specified it. Works with Linux
     and macOS.
@@ -353,10 +353,9 @@ def open_in_chimera(directory, options):
             if options.verbose:
                 sys.stderr.write('Opening model %s in Chimera' % file)
             if sys.platform == 'darwin':
-                os.system('/Applications/Chimera.app/Contents/MacOS/chimera'
-                          + file)
+                os.system('/Applications/Chimera.app/Contents/MacOS/chimera results/' + file)
             else:
-                os.system('chimera' + file)
+                os.system('chimera results/' + file)
 
 
 def print_chain_in_structure(structure):
