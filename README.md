@@ -45,12 +45,10 @@ SciPuzzle can be downloaded from GitHub and installed with the `setup.py` file. 
 
 ```
 git clone https://github.com/gabcg/scipuzzle.git
-cd scipuzzle
-pip install . 
+cd scipuzzle/scipuzzle
 ```
 
-**After any of this steps, the program can be executed as** `python3 -m scipuzzle [options]`
-
+**Then, execute it as** `python3 main.py [options]`
 
 The program needs a directory containing PDB files. Each file contains a pair of subunits from the same macrocomplex. Then, an output directory and the stoichiometry of the complex are specified. It has some extra options such as a graphical interface, a verbose mode or the ability to open the results in Chimera.
 
@@ -106,7 +104,7 @@ RMSD between 177 pruned atom pairs is 0.639 angstroms; (across all 203 pairs: 6.
 The obtention of the model was made by running:
 
 ```
-python3 -m scipuzzle -i 6ezm -o 6ezm_model1
+python3 main.py -i ../examples/6ezm/ -v -o 6ezm_model
 ```
 
 ### Example 2
@@ -118,7 +116,7 @@ This protein is T state haemoglobin (PDB ID [1GZX](https://www.rcsb.org/structur
 The command used to execute this model is:
 
 ```
-python3 -m scipuzzle -i 1gzx -o 1gzx_model1
+python3 main.py -i ../examples/1gzx -v -o 1gzx_model
 ```
 
 ### Example 3 
@@ -132,7 +130,7 @@ The structure comparison analysis between the unfinished model and the real stru
 The command used to execute this model is:
 
 ```
-python3 -m scipuzzle -i 1gzx -o 1gzx_model1
+python3 main.py -i ../examples/1fpy/ -v -o 1fpy_model -nc 10
 ```
 
 

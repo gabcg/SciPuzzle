@@ -7,7 +7,7 @@ import Bio.PDB as pdb
 from Bio import pairwise2
 import itertools
 import copy
-import scipuzzle.__main__ as main
+import __main__ as main
 import pickle
 
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
-import scipuzzle.arguments as arguments
-import scipuzzle.interface as interface
-import scipuzzle.utils as utils
+import arguments as arguments
+import interface as interface
+import utils as utils
 import copy
 import random
-import scipuzzle.messages as msg
+import messages as msg
 
 # STEP 1: parse the arguments
 options = arguments.read_args()
