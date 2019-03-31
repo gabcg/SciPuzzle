@@ -113,9 +113,14 @@ def construct_complex(current_complex_real,
                           structures, used_pairs,clashing, old_complex )
         return
     else:
-        for chain_in_current_complex in utils.get_chains_in_complex(used_pairs):
+        for chain_in_current_complex in utils.get_chain_ids_from_structure(current_complex):
+            if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
+                "2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                break
+                return
             ps = utils.get_possible_structures(chain_in_current_complex,
                                                similar_chains, structures, used_pairs, clashing)
+            print("Possible structures : "+ str(ps))
             if len(ps) == 0 and options.stoichiometry is None:
                 if options.verbose:
                     sys.stderr.write("Complex built!! :)\n")
@@ -128,7 +133,7 @@ def construct_complex(current_complex_real,
                 return
             elif len(ps) == 0:
                 if len(utils.get_chain_ids_from_structure(current_complex)) == len(utils.get_chain_ids_from_structure(old_complex)):
-
+                    complexes_found.append(current_complex)
                     utils.print_chain_in_structure(current_complex)
                     utils.print_chain_in_structure(old_complex)
                     print("Already found!")
@@ -145,8 +150,14 @@ def construct_complex(current_complex_real,
                     #                                    similar_chains, structures, used_pairs, clashing)
 
             for similar_chain_id in ps:
+                if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
+                    "2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    break
+                    return
+
                 structure_id = ps[similar_chain_id]
                 print('chain in current complex '+ str(chain_in_current_complex))
+                print("similar_chain_id "+ str(similar_chain_id))
                 utils.print_chain_in_structure(current_complex)
                 print(used_pairs)
                 structure_to_superimpose = structures[structure_id]
@@ -154,11 +165,16 @@ def construct_complex(current_complex_real,
                 if options.verbose:
                     sys.stderr.write("\nTrying to add: "+str(other)+"\n")
                     sys.stderr.write("Superimposing structure: "+str(structure_id)+"\n")
+                    print("-------------------")
+                    utils.print_chain_in_structure(structure_to_superimpose)
                 matrix = utils.superimpose_chains_test(utils.get_chain(current_complex,chain_in_current_complex)
-                                                      ,utils.get_chain(structure_to_superimpose, similar_chain_id))
+                                                      ,utils.get_chain_permissive(structure_to_superimpose, similar_chain_id))
+                print("other "+ str(other))
+                utils.print_chain_in_structure(structure_to_superimpose)
+                print(used_pairs)
                 matrix.apply(utils.get_chain(structure_to_superimpose,other))
-
-                chain_to_add = utils.get_chain(structure_to_superimpose,other)
+                chain_to_add = utils.get_chain_permissive(structure_to_superimpose,other)
+                print(chain_to_add)
                 if not utils.are_clashing(current_complex,chain_to_add):
                     if options.verbose:
                         sys.stderr.write("Not clashing -- adding chain! \n")
@@ -175,13 +191,23 @@ def construct_complex(current_complex_real,
                         for chain in utils.get_chains_from_structure(current_complex):
                             print(chain)
                         complexes_found.append(current_complex)
+                        print("jkdfsjklfjhljhfdkslsdhjklsdfhjkl")
+                        break
                         return
                     else:
                         #elif --> add repeated!
+                        if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
+                            "1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                            break
+                            return
                         construct_complex(current_complex,
                                           similar_chains, stoichiometry,
                                           structures, used_pairs, clashing, old_complex)
-                        return
+                        if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
+                            "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                            break
+                            return
+
 
 
 
