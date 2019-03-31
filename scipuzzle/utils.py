@@ -10,7 +10,7 @@ import exceptions
 import copy
 import __main__ as main
 import pickle
-
+import messages as msg
 
 def resume(options):
     """
@@ -138,7 +138,7 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(chain_one, chain_two, max_clashes=300, contact_distance=1.0):
+def are_clashing(chain_one, chain_two, max_clashes=150, contact_distance=1.5):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
@@ -155,6 +155,15 @@ def are_clashing(chain_one, chain_two, max_clashes=300, contact_distance=1.0):
                 if main.options.verbose:
                     sys.stderr.write("Clash Found!\n")
                 return True
+    return False
+
+
+
+def complex_differ(structure_one, structure_two):
+    chains_one_len = len(get_chain_ids_from_structure(structure_one))
+    chains_two_len = len(get_chain_ids_from_structure(structure_two))
+    if chains_one_len != chains_two_len:
+        return True
     return False
 
 
@@ -236,8 +245,18 @@ def add_chain_to_structure(complex, chain_real, possible_ids, mapping_chain_ids)
     chain.id = id_to_assign
     complex[0].add(chain)
 
+
+def select_pair_to_superimpose(similar_chain_id, ps, structures):
+    structure_id = ps[similar_chain_id]
+    structure_to_superimpose = structures[structure_id]
+    other = [tuple_id for tuple_id in structure_id if tuple_id != similar_chain_id][0]
+    if main.options.verbose:
+        msg.trying_superimpose(other, structure_id)
+    return (structure_to_superimpose,other)
+
+
 def get_possible_structures(chain_in_current_complex, similar_chains,
-                            structures, used_pairs, clashing, new_chain):
+                            structures, used_pairs, clashing):
     #id_new = new_chain.id.split("-")[0]
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
