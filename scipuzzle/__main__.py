@@ -33,6 +33,7 @@ else:
 
 
 complexes_found = []
+temp = None
 if options.verbose:
     sys.stderr.write("\n# Beginning to construct the complex\n\n")
 # STEP4: Begin Macrocomplex reconstruction!
@@ -44,7 +45,8 @@ def construct_complex(current_complex_real,
     used_pairs = copy.deepcopy(used_pairs_real)
     clashing = copy.deepcopy(clashing_real)
     old_complex = copy.deepcopy(old_complex_real)
-
+    print("SIMILAR CHAINS::" + str(similar_chains))
+    global temp
     print("HOLA")
     # for the first round its going to be a random pair of chains.
     if current_complex is None:
@@ -78,15 +80,15 @@ def construct_complex(current_complex_real,
                 complexes_found.append(current_complex)
                 return
             elif len(ps) == 0:
-                if stoichiometry is None:
                     if len(utils.get_chain_ids_from_structure(current_complex)) == len(utils.get_chain_ids_from_structure(old_complex)):
-                        complexes_found.append(current_complex)
+                        #complexes_found.append(current_complex)
                         utils.print_chain_in_structure(current_complex)
                         utils.print_chain_in_structure(old_complex)
                         print("Already found!")
+                        temp = current_complex
                         return
-                else:
                     old_complex = current_complex
+                    #if temp
                     clashing = []
                     print("calling myself again")
                     construct_complex(current_complex,
@@ -116,7 +118,6 @@ def construct_complex(current_complex_real,
                 matrix = utils.superimpose_chains_test(utils.get_chain(current_complex,chain_in_current_complex)
                                                       ,utils.get_chain_permissive(structure_to_superimpose, similar_chain_id))
                 print("other "+ str(other))
-                utils.print_chain_in_structure(structure_to_superimpose)
                 print(used_pairs)
                 matrix.apply(utils.get_chain(structure_to_superimpose,other))
                 chain_to_add = utils.get_chain_permissive(structure_to_superimpose,other)
@@ -158,13 +159,22 @@ test_complex = construct_complex(None, similar_chains,
                                  stoichiometry, structures, [], [], [])
 # Step5: Filter the good ones
 
+
+
 # Step 6: write output file
 index_file = 0
-
+if len(complexes_found) == 0:
+    print("Entering, temp:"+str(temp))
+    complexes_found.append(temp)
 for complex in complexes_found:
+    print(complex)
     index_file += 1
+    if options.output is None:
+        outputfile = "results/output"
+    else:
+        outputfile = "results/"+str(options.output)
     utils.write_structure_into_file(complex,
-                                    options.output+str(index_file)+".cif",
+                                    outputfile+str(index_file)+".cif",
                                     "mmcif")
 
 # Step 7 (optional): open models in Chimera

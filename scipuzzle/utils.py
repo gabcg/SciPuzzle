@@ -17,7 +17,7 @@ def resume(options):
     Returns a list with data needed for running the program by reading the
     binary files created by pickle.
     """
-    prefix = 'resume/' + options.input.split('/')[-1]
+    prefix = 'resume/' + options.input.strip('/').split('/')[-1]
     chains = pickle.load(open(prefix + "_chains.p", "rb"))
     pairs = pickle.load(open(prefix + "_pairs.p", "rb"))
     similar_chains = pickle.load(open(prefix + "_similar_chains.p", "rb"))
@@ -80,6 +80,9 @@ def get_chains(input_file):
     return chains
 
 
+
+
+
 def get_similar_chains(chains, sequence_identity_threshold=0.95):
     """
     Compute which chains are similar to which ones given a dictionary having
@@ -96,17 +99,19 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
     for chain_1, chain_2 in itertools.combinations(chains, 2):
         alignments = pairwise2.align.globalxx(chain_to_fasta(chains[chain_1]),
                                               chain_to_fasta(chains[chain_2]))
-        pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
-        if pairwise_sequence_identity >= sequence_identity_threshold:
-            (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
-
-            if rmsd < 0.05:
-                if chain_1 not in similar_chains:
-                    similar_chains[chain_1] = []
-                if chain_2 not in similar_chains:
-                    similar_chains[chain_2] = []
-                similar_chains[chain_1].append(chain_2)
-                similar_chains[chain_2].append(chain_1)
+        if alignments is not None:
+            print("alignments[0][2]:"+str(alignments[0][2]))
+            print("second part"+str(len(alignments[0][0])))
+            pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
+            if pairwise_sequence_identity >= sequence_identity_threshold:
+                (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
+                if rmsd < 0.05:
+                    if chain_1 not in similar_chains:
+                        similar_chains[chain_1] = []
+                    if chain_2 not in similar_chains:
+                        similar_chains[chain_2] = []
+                    similar_chains[chain_1].append(chain_2)
+                    similar_chains[chain_2].append(chain_1)
     return similar_chains
 
 
@@ -138,7 +143,7 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(chain_one, chain_two, max_clashes=300, contact_distance=1.0):
+def are_clashing(chain_one, chain_two, max_clashes=300, contact_distance=1.4):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
@@ -151,7 +156,10 @@ def are_clashing(chain_one, chain_two, max_clashes=300, contact_distance=1.0):
     for atom_two in atoms_two:
         for atom in ns.search(atom_two.get_coord(), contact_distance, 'A'):
             clashes += 1
+            print("atom"+str(atom))
+            print("number of clashes:"+str(clashes))
             if clashes == max_clashes:
+                print("number of clashes2:"+str(clashes))
                 if main.options.verbose:
                     sys.stderr.write("Clash Found!\n")
                 return True
@@ -413,7 +421,7 @@ def get_information(input_files, options):
     # Save everything to binary files to be able to resume.
     if not os.path.exists('resume'):
         os.makedirs('resume')
-    prefix = 'resume/' + options.input.split('/')[-1]
+    prefix = 'resume/' + options.input.strip('/').split('/')[-1]
     chains_backup = open(prefix + "_chains.p", "wb")
     pairs_backup = open(prefix + "_pairs.p", "wb")
     similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
