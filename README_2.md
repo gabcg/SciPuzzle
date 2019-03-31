@@ -46,11 +46,9 @@ SciPuzzle can be downloaded from GitHub and installed with the `setup.py` file. 
 ```
 git clone https://github.com/gabcg/scipuzzle.git
 cd scipuzzle
-pip install . 
 ```
 
-**After any of this steps, the program can be executed as** `python3 -m scipuzzle [options]`
-
+**Then, execute it as** `python3 scipuzzle [options]`
 
 The program needs a directory containing PDB files. Each file contains a pair of subunits from the same macrocomplex. Then, an output directory and the stoichiometry of the complex are specified. It has some extra options such as a graphical interface, a verbose mode or the ability to open the results in Chimera.
 
