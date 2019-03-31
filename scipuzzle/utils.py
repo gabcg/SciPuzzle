@@ -116,7 +116,7 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(chain_one, chain_two, max_clashes=60, contact_distance=1.2):
+def are_clashing(chain_one, chain_two, max_clashes=100, contact_distance=1.0):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
@@ -222,7 +222,8 @@ def add_chain_to_structure(complex, chain_real, possible_ids, mapping_chain_ids)
     complex[0].add(chain)
 
 def get_possible_structures(chain_in_current_complex, similar_chains,
-                            structures, used_pairs, clashing):
+                            structures, used_pairs, clashing, new_chain):
+    #id_new = new_chain.id.split("-")[0]
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
         for sim_chain in similar_chains[chain_in_current_complex]:
@@ -230,7 +231,7 @@ def get_possible_structures(chain_in_current_complex, similar_chains,
                 if sim_chain in tuple_key:
                     print(tuple_key)
                     print(used_pairs)
-                    if tuple_key not in used_pairs:
+                    if tuple_key not in used_pairs :
                         if tuple_key not in clashing:
                             possible_structures[sim_chain] = (tuple_key)
     return possible_structures

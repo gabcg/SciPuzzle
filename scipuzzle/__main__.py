@@ -114,12 +114,12 @@ def construct_complex(current_complex_real,
         return
     else:
         for chain_in_current_complex in utils.get_chain_ids_from_structure(current_complex):
-            if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
-                "2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                break
-                return
+            a = utils.get_chains_from_structure(current_complex)
+            b = utils.get_chains_from_structure(old_complex)
+            new_chain = set(a).difference(set(b))
+            print("new chain "+ str(new_chain))
             ps = utils.get_possible_structures(chain_in_current_complex,
-                                               similar_chains, structures, used_pairs, clashing)
+                                               similar_chains, structures, used_pairs, clashing, new_chain)
             print("Possible structures : "+ str(ps))
             if len(ps) == 0 and options.stoichiometry is None:
                 if options.verbose:
@@ -132,12 +132,13 @@ def construct_complex(current_complex_real,
                 complexes_found.append(current_complex)
                 return
             elif len(ps) == 0:
-                if len(utils.get_chain_ids_from_structure(current_complex)) == len(utils.get_chain_ids_from_structure(old_complex)):
-                    complexes_found.append(current_complex)
-                    utils.print_chain_in_structure(current_complex)
-                    utils.print_chain_in_structure(old_complex)
-                    print("Already found!")
-                    return
+                if stoichiometry is None:
+                    if len(utils.get_chain_ids_from_structure(current_complex)) == len(utils.get_chain_ids_from_structure(old_complex)):
+                        complexes_found.append(current_complex)
+                        utils.print_chain_in_structure(current_complex)
+                        utils.print_chain_in_structure(old_complex)
+                        print("Already found!")
+                        return
                 else:
                     old_complex = current_complex
                     clashing = []
@@ -196,17 +197,17 @@ def construct_complex(current_complex_real,
                         return
                     else:
                         #elif --> add repeated!
-                        if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
-                            "1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                            break
+                        if len(complexes_found) == 1:
+                            print("skldjhgsalfjhgskdjhfgkajsdhfgkasdhjfgsdafkjhsad!!!!!222!")
                             return
+
                         construct_complex(current_complex,
                                           similar_chains, stoichiometry,
                                           structures, used_pairs, clashing, old_complex)
-                        if stoichiometry is not None and utils.complex_fits_stoich(current_complex,stoichiometry):
-                            "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                            break
+                        if len(complexes_found) == 1:
+                            print("skldjhgsalfjhgskdjhfgkajsdhfgkasdhjfgsdafkjhsad!!!!!!")
                             return
+
 
 
 
