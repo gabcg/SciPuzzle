@@ -7,7 +7,7 @@ import Bio.PDB as pdb
 from Bio import pairwise2
 import itertools
 import copy
-import scipuzzle.__main__ as main
+#import scipuzzle.__main__ as main
 import pickle
 
 
@@ -20,7 +20,7 @@ def resume(options):
     binary files created by pickle.
     """
     print("option_parsed input")
-    print(main.options.input)
+    #print(main.options.input)
     print(options.input)
     prefix = 'resume/' + options.input.strip('/').split('/')[-1]
     chains = pickle.load(open(prefix + "_chains.p", "rb"))
