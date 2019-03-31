@@ -59,6 +59,8 @@ def get_input_files(input):
     terminating in ".pdb" are collected and returned in a list object, or it
     can be a list of files, in which case the input itself will be returned.
     """
+    if input[-1] == '/':
+        input = input[:-1]
     input_files = []
     if os.path.isdir(input):
         for filename in os.listdir(input):
