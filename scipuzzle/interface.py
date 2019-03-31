@@ -21,15 +21,8 @@ def gui():
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
                         default="",
-                        help="Output directory",
-                        widget="DirChooser",
+                        help="Output name",
                         metavar="Output (-o)")
-    # If we want the output to be a dir, then the model files need a prefix
-    # parser.add_argument('-p', '--prefix', dest="prefix",
-    #                     action="store",
-    #                     default="model",
-    #                     help="Prefix for your file models",
-    #                     metavar="Prefix (-p)")
     parser.add_argument('-s', '--stoichiometry', dest="stoichiometry",
                         action="store",
                         default=None,
@@ -43,13 +36,12 @@ def gui():
     parser.add_argument('-r', '--resume', dest="resume",
                         action="store_true",
                         default=False,
-                        help="Resume the program after a crash or when using \
-                        a different stoichiometry",
+                        help="Resume the program from a save point",
                         metavar="Resume (-r)")
     parser.add_argument('-c', '--chimera', dest="open_chimera",
                         action="store_true",
                         default=False,
-                        help="Open models in Chimera when execution finishes",
+                        help="Open models in Chimera",
                         metavar="Open in Chimera (-c)")
     options = parser.parse_args()
     return options
