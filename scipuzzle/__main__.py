@@ -145,12 +145,7 @@ if len(complexes_found) == 0:
 
 for complex in complexes_found:
     index_file += 1
-    if options.output is None:
-        outputfile = "results/output"
-        outname = outputfile+str(index_file)+".cif"
-    else:
-        outputfile = "results/"+str(options.output)
-        outname = outputfile+str(index_file)+".cif"
+    outname = "results/"+str(options.output)+str(index_file)+".cif"
     utils.write_structure_into_file(complex, outname, "mmcif")
 
 

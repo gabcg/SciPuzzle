@@ -20,7 +20,7 @@ def gui():
                         metavar="Input (-i)")
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
-                        default="",
+                        default="model",
                         help="Output name",
                         metavar="Output (-o)")
     parser.add_argument('-s', '--stoichiometry', dest="stoichiometry",
