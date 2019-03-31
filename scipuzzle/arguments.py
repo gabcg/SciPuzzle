@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import argparse
 import os
 import re
@@ -7,17 +8,21 @@ import re
 
 def read_args():
     """Parse the commandline arguments and returns the namespace."""
-    parser = argparse.ArgumentParser(description="Recreates a Macrocomplex \
+    parser = argparse.ArgumentParser(description="Recreates a macrocomplex \
                                                   given different pdb files \
                                                   containing interacting \
-                                                  protein pairs.")
+                                                  protein pairs. \
+                                                  \
+                                                  If you need a graphic \
+                                                  interface, use the -gui \
+                                                  option by itself.")
     parser.add_argument('-i', '--input', dest="input",
                         action="store",
                         default=None,
-                        help="Input Folder containing PDB formatted files")
+                        help="Input directory containing PDB formatted files")
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
-                        default="reconstructed_macrocomplex.pdb",
+                        default=None,
                         help="PDB formatted outputfile")
     parser.add_argument('-s', '--stoichiometry', dest="stoichiometry",
                         action="store",
@@ -26,11 +31,21 @@ def read_args():
     parser.add_argument('-v', '--verbose', dest="verbose",
                         action="store_true",
                         default=False,
-                        help="Verbose Mode")
+                        help="Verbose mode")
     parser.add_argument('-r', '--resume', dest="resume",
                         action="store_true",
                         default=False,
-                        help="Resume Mode")
+                        help="Resume the program after a crash or when using \
+                        a different stoichiometry")
+    parser.add_argument('-c', '--chimera', dest="open_chimera",
+                        action="store_true",
+                        default=False,
+                        help="Open models in Chimera when execution finishes")
+    parser.add_argument('-gui', '--graphic_interface', dest="gui",
+                        action="store_true",
+                        default=False,
+                        help="Graphic user interface mode")
+
     options = parser.parse_args()
     return options
 
@@ -61,7 +76,7 @@ def parse_stoichiometry(stoichiometry):
 
     e.g. A3B12C1 --> {'A':3, 'B':12, 'C':1}
     """
-    sto_dict = dict(re.findall("(\w)(\d*)",stoichiometry))
+    sto_dict = dict(re.findall("(\w)(\d*)", stoichiometry))
     for key in sto_dict:
         sto_dict[key] = int(sto_dict[key])
     return sto_dict

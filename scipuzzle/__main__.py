@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import arguments
+import interface
 import utils
 import exceptions
 import copy
@@ -10,69 +11,25 @@ import pickle
 from global_vars import *
 # STEP 1: parse the arguments
 options = arguments.read_args()
+if options.gui:
+    options = interface.gui()
+
 input_files = arguments.get_input_files(options.input)
 stoichiometry = None
 if options.stoichiometry is not None:
     stoichiometry = arguments.parse_stoichiometry(options.stoichiometry)
 if options.verbose:
     utils.options = options
-    write_welcoming(input_files)
-
-chains = {}
-pairs = []
-structures = {}
-similar_chains = {}
-directory = options.input.strip().split("/")[-2]
-prefix = "resume/"+directory
-if options.resume:
-    try:
-        chains = pickle.load(open(prefix + "_chains.p", "rb"))
-        pairs = pickle.load(open(prefix + "_pairs.p", "rb"))
-        similar_chains = pickle.load(open(prefix + "_similar_chains.p", "rb"))
-        structures = pickle.load(open(prefix + "_structures.p", "rb"))
-        # stoichiometry =pickle.load(open(options.input + "stoichiometry.p", "rb"))
-
-        print("The following structures have been recovered:")
-        print("Chains: \n" + str(chains))
-        print("Paired chains: \n"+str(pairs))
-        print("Similar Chains:\n"+str(similar_chains))
-        print("Sto: " + str(stoichiometry))
-        print("structures: \n" + str(structures))
-    except FileNotFoundError:
-        pass
-
-else:
-    # STEP2: Get possible structures for Macrocomplex construction and skip others
-    chain_index = 1
+    sys.stderr.write("Input correctly parsed.\nFiles used as input:\n")
     for file in input_files:
-        paired_chains = []
-        structure = utils.get_structure(file, remove_het = True)
-        for chain in utils.get_chains_from_structure(structure, remove_het = True):
-            chain_id = str(chain_index)+"_"+str(chain.id)
-            chains[chain_id] = chain
-            chain.id = chain_id
-            paired_chains.append(chain_id)
-        pairs.append(paired_chains)
-        structures[tuple(paired_chains)] = structure
-        chain_index += 1
-    similar_chains = utils.get_similar_chains(chains)
-    (chains, similar_chains, pairs) = utils.remove_useless_chains(chains, similar_chains, pairs)
+        sys.stderr.write("\t"+file+"\n")
+    sys.stderr.write("\n")
 
-    print("Chains: \n" + str(chains))
-    print("Paired chains: \n"+str(pairs))
-    print("Similar Chains:\n"+str(similar_chains))
-    print("Sto: " + str(stoichiometry))
-    print("structures: \n" + str(structures))
-    chains_b = open(prefix + "_chains.p", "wb")
-    pairs_b = open(prefix + "_pairs.p", "wb")
-    similar_chains_b = open(prefix + "_similar_chains.p", "wb")
-    structures_b = open(prefix + "_structures.p", "wb")
-    # stioichiometry_b = open(options.input + "stoichiometry.p", "wb")
-    pickle.dump(chains, chains_b)
-    pickle.dump(pairs, pairs_b)
-    pickle.dump(similar_chains, similar_chains_b)
-    pickle.dump(structures, structures_b)
-        # pickle.dump(stoichiometry, stioichiometry_b)
+# Step 2: get possible structures for macrocomplex construction and skip others
+if options.resume:
+    (chains, pairs, similar_chains, structures) = utils.resume(options)
+else:
+    (chains, pairs, similar_chains, structures) = utils.get_information(input_files, options)
 
 
 complexes_found = []
@@ -201,8 +158,15 @@ test_complex = construct_complex(None, similar_chains,
                                  stoichiometry, structures, [], [], [])
 # Step5: Filter the good ones
 
-# Step6 : write output file
+# Step 6: write output file
 index_file = 0
+
 for complex in complexes_found:
     index_file += 1
-    utils.write_structure_into_file(complex, "results/output"+str(index_file)+".cif", "mmcif")
+    utils.write_structure_into_file(complex,
+                                    options.output+str(index_file)+".cif",
+                                    "mmcif")
+
+# Step 7 (optional): open models in Chimera
+if options.open_chimera:
+    utils.open_in_chimera(options.output)
