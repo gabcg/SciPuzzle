@@ -23,11 +23,11 @@ def gui():
                         default="model",
                         help="Output name",
                         metavar="Output (-o)")
-    parser.add_argument('-s', '--stoichiometry', dest="stoichiometry",
+    parser.add_argument('-nc', '--number_chains', dest="nc",
                         action="store",
                         default=None,
-                        help="Stoichiometry",
-                        metavar="Stoichiometry (-s)")
+                        help="Maximum number of chains",
+                        metavar="Number of chains (-nc)")
     parser.add_argument('-v', '--verbose', dest="verbose",
                         action="store_true",
                         default=False,
