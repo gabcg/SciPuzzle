@@ -74,14 +74,7 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
-<<<<<<< HEAD
-            (superimposed, rmsd) = superimpose_chains(chains[chain_1],
-                                                      chains[chain_2])
-            print(rmsd)
-=======
             (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
-
->>>>>>> origin/adding-pairs
             if rmsd < 0.05:
                 if chain_1 not in similar_chains:
                     similar_chains[chain_1] = []
@@ -120,11 +113,7 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-<<<<<<< HEAD
-def are_clashing(structure, chain, max_clashes=50, contact_distance=1.0):
-=======
-def are_clashing(chain_one, chain_two, max_clashes=100, contact_distance=1.0):
->>>>>>> origin/adding-pairs
+def are_clashing(structure, chain, max_clashes=100, contact_distance=1.0):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
@@ -144,16 +133,12 @@ def are_clashing(chain_one, chain_two, max_clashes=100, contact_distance=1.0):
     return False
 
 
-<<<<<<< HEAD
-def get_chain_from_structure(structure, remove_het=False):
-=======
 def get_chains_from_structure(structure, remove_het = False):
     """
     Creates a list of chains out of a given structure.
     If remove_het is set to true, the heteroatoms are removed from the chain.
     Returns the list of chains.
     """
->>>>>>> origin/adding-pairs
     chains = []
     for model in structure:
         for chain in model:
@@ -168,8 +153,6 @@ def get_chains_from_structure(structure, remove_het = False):
     return chains
 
 
-<<<<<<< HEAD
-=======
 def get_chain_permissive(structure, chain_id):
     """
     Extract a specific chain from a structure given a specified chain id.
@@ -182,7 +165,6 @@ def get_chain_permissive(structure, chain_id):
             return chain
 
 
->>>>>>> origin/adding-pairs
 def get_chain(structure, chain_id):
     """
     Extract a specific chain from a structure given a specified chain id.
@@ -201,11 +183,8 @@ def get_chain_ids_from_structure(structure):
     return chains_ids
 
 
-<<<<<<< HEAD
 
-def get_possible_structures(chain_in_current_complex, similar_chains,
-                            structures, used_pairs):
-=======
+
 def complexes_are_equal(structure1, structure2):
     chain_ids_one = get_chain_ids_from_structure(structure1)
     chain_ids_two = get_chain_ids_from_structure(structure2)
@@ -244,7 +223,6 @@ def add_chain_to_structure(complex, chain_real, possible_ids, mapping_chain_ids)
 def get_possible_structures(chain_in_current_complex, similar_chains,
                             structures, used_pairs, clashing, new_chain):
     #id_new = new_chain.id.split("-")[0]
->>>>>>> origin/adding-pairs
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
         for sim_chain in similar_chains[chain_in_current_complex]:
@@ -346,7 +324,6 @@ def superimpose(structure_one_real, structure_two_real):
     super_imposer.apply(list(structure_two[0].get_atoms()))
     return (structure_two, super_imposer.rms)
 
-<<<<<<< HEAD
 
 def superimpose_old(chain_one, chain_two):
     """
@@ -363,7 +340,7 @@ def superimpose_old(chain_one, chain_two):
     super_imposer.set_atoms(atoms_one, atoms_two)
     super_imposer.apply(chain_two.get_atoms())
     return (chain_two, super_imposer.rms)
-=======
+
 # REMOVE ?
 # def stoichiometry_is_not_ended(stoichiometry, current_chains_in_complex):
 #     """
@@ -375,7 +352,7 @@ def superimpose_old(chain_one, chain_two):
 #         return True
 #     else:
 #         return False
->>>>>>> origin/adding-pairs
+
 
 
 def write_structure_into_file(structure, name, format):

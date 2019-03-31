@@ -196,13 +196,12 @@ def construct_complex(current_complex_real,
                         break
                         return
                     else:
-<<<<<<< HEAD
                         print("getting here!")
                         construct_complex(current_complex, chains,
                                           similar_chains, stoichiometry, pairs,
                                           structures, used_pairs)
                         return
-=======
+
                         #elif --> add repeated!
                         if len(complexes_found) == 1:
                             print("skldjhgsalfjhgskdjhfgkajsdhfgkasdhjfgsdafkjhsad!!!!!222!")
@@ -214,10 +213,6 @@ def construct_complex(current_complex_real,
                         if len(complexes_found) == 1:
                             print("skldjhgsalfjhgskdjhfgkajsdhfgkasdhjfgsdafkjhsad!!!!!!")
                             return
-
-
-
->>>>>>> origin/adding-pairs
 
 
 test_complex = construct_complex(None, similar_chains,
