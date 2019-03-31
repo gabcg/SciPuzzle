@@ -6,18 +6,23 @@ import sys
 import Bio.PDB as pdb
 from Bio import pairwise2
 import itertools
-import exceptions
 import copy
 import __main__ as main
 import pickle
-import messages as msg
 
+
+# ---------------------------
+# -- Resume realated methods
+# ---------------------------
 def resume(options):
     """
     Returns a list with data needed for running the program by reading the
     binary files created by pickle.
     """
-    prefix = 'resume/' + options.input.split('/')[-1]
+    print("option_parsed input")
+    print(main.options.input)
+    print(options.input)
+    prefix = 'resume/' + options.input.strip('/').split('/')[-1]
     chains = pickle.load(open(prefix + "_chains.p", "rb"))
     pairs = pickle.load(open(prefix + "_pairs.p", "rb"))
     similar_chains = pickle.load(open(prefix + "_similar_chains.p", "rb"))
@@ -33,6 +38,70 @@ def resume(options):
     return (chains, pairs, similar_chains, structures)
 
 
+def get_information(input_files, options):
+    """
+    Gets the possible structures for the macrocomplex construction.
+
+    It gets each pair of chains from each file, constructing a chain ID. Once
+    completed, the following structures are created:
+
+    - A dictionary with the ID as key and the chain as value.
+    - A list with sublists that contain IDs by pairs.
+
+    After that, similar chains are gotten from the dictionary, generating a
+    dictionary with key: ID and values: similar chains' IDs.
+
+    At the end, the unneeded chains are removed.
+    """
+    chains = {}
+    pairs = []
+    structures = {}
+    chain_index = 1
+    for file in input_files:
+        paired_chains = []
+        structure = get_structure_from_file(file, remove_het=True)
+        for chain in get_chains_from_structure(structure, remove_het=True):
+            chain_id = str(chain_index)+"_"+str(chain.id)
+            chains[chain_id] = chain
+            chain.id = chain_id
+            paired_chains.append(chain_id)
+        pairs.append(paired_chains)
+        structures[tuple(paired_chains)] = structure
+        chain_index += 1
+    similar_chains = get_similar_chains(chains)
+    (chains, similar_chains, pairs) = remove_useless_chains(chains,
+                                                            similar_chains,
+                                                            pairs)
+
+    # Save everything to binary files to be able to resume.
+    if not os.path.exists('resume'):
+        os.makedirs('resume')
+    prefix = 'resume/' + options.input.strip('/').split('/')[-1]
+    chains_backup = open(prefix + "_chains.p", "wb")
+    pairs_backup = open(prefix + "_pairs.p", "wb")
+    similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
+    structures_backup = open(prefix + "_structures.p", "wb")
+    pickle.dump(chains, chains_backup)
+    pickle.dump(pairs, pairs_backup)
+    pickle.dump(similar_chains, similar_chains_backup)
+    pickle.dump(structures, structures_backup)
+
+    if options.verbose:
+        sys.stderr.write("The analysis of the input results in:\n")
+        sys.stderr.write("\tChains: %s\n" % len(chains))
+        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
+        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
+        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
+        sys.stderr.write("Resume files have been saved in %s/resume\n"
+                         % os.getcwd())
+
+    return (chains, pairs, similar_chains, structures)
+
+# ---------------------------
+#  Utils functions
+# ---------------------------
+
+
 def chain_to_fasta(chain):
     """
     Extracts the fasta sequence from a PDB file and returns a string
@@ -43,10 +112,11 @@ def chain_to_fasta(chain):
         return pp.get_sequence()
 
 
-def get_structure(input_file, remove_het=False):
+def get_structure_from_file(input_file, remove_het=False):
     """
     Extracts the structure from a pdb file.
-    Returns the structure.
+    Returns a Structure object.
+    If parameter remove_het is set to True, heteroatoms are removed.
     """
     parser = pdb.PDBParser(QUIET=True)
     structure = parser.get_structure('X', input_file)
@@ -55,31 +125,85 @@ def get_structure(input_file, remove_het=False):
     else:
         for model in structure:
             for chain in model:
-                heteroatoms = list(filter(lambda x: x.id[0] != " ",
-                                          chain.get_residues()))
-                for heteroatom in heteroatoms:
-                    chain.detach_child(heteroatom.id)
+                remove_heteroatoms(chain)
         return structure
 
 
-def get_chains(input_file):
+def get_chains_from_structure(structure, remove_het=False):
     """
-    Extracts the chains from a pdb file and removes the heteroatoms from it.
-    Returns a list containing n chain objects where n is the number of chains
-    contained in the input file.
+    Creates a list of chains out of a given structure.
+    If remove_het is set to true, the heteroatoms are removed from the chain.
+    Returns the list of chains.
     """
     chains = []
-    structure = get_structure(input_file)
     for model in structure:
         for chain in model:
-            heteroatoms = list(filter(lambda x: x.id[0] != " ",
-                                      chain.get_residues()))
-            for heteroatom in heteroatoms:
-                chain.detach_child(heteroatom.id)
-            chains.append(chain)
+            if not remove_het:
+                chains.append(chain)
+            else:
+                remove_heteroatoms(chain)
+                chains.append(chain)
     return chains
 
 
+def remove_heteroatoms(chain):
+    """Removes the heteroatoms of a given chain."""
+    heteroatoms = list(filter(lambda x: x.id[0] != " ",
+                              chain.get_residues()))
+    for heteroatom in heteroatoms:
+        chain.detach_child(heteroatom.id)
+
+##???
+def get_chain_permissive(structure, chain_id):
+    """
+    Extract a specific chain from a structure given a specified chain id.
+    Returns a chain object.
+    """
+    for chain in get_chains_from_structure(structure):
+        if chain.id == chain_id:
+            return chain
+        elif chain_id in chain.id:
+            print("000000000000000000  COMING IN THIS ")
+            return chain
+
+
+def get_chain(structure, chain_id):
+    """
+    Extract a specific chain from a structure given a specified chain id.
+    Returns a chain object.
+    """
+    for chain in get_chains_from_structure(structure):
+        if chain.id == chain_id:
+            return chain
+
+
+def get_chain_ids_from_structure(structure):
+    """
+    Extracts all chain ids from a given sructure.
+    Returns a list.
+    """
+    chains_ids = []
+    for model in structure:
+        for c in model:
+            chains_ids.append(c.id)
+    return chains_ids
+
+
+def add_chain(structure, chain_real):
+    """
+    Add a given chain to a structure.
+    Modifies the chain Id if necessary.
+    """
+    chain = copy.deepcopy(chain_real)
+    chains_ids = get_chain_ids_from_structure(structure)
+    while chain.id in chains_ids:
+        chain.id = chain.id+"-"+chain.id
+    structure[0].add(chain)
+
+
+# ---------------------------------
+# Macrocomplex building functions
+# ---------------------------------
 def get_similar_chains(chains, sequence_identity_threshold=0.95):
     """
     Compute which chains are similar to which ones given a dictionary having
@@ -98,8 +222,8 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
-            (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
-
+            (superimposed, rmsd) = superimpose_chains(chains[chain_1],
+                                                      chains[chain_2])
             if rmsd < 0.05:
                 if chain_1 not in similar_chains:
                     similar_chains[chain_1] = []
@@ -138,14 +262,14 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(chain_one, chain_two, max_clashes=150, contact_distance=1.5):
+def are_clashing(struct, chain, max_clashes=50, contact_distance=1.0):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
-    contact distance.
+    contact distance and a maximum number of clashes.
     Returns a boolean.
     """
-    atoms_one = [atom for atom in chain_one.get_atoms() if atom.get_id() == 'CA']
-    atoms_two = [atom for atom in chain_two.get_atoms() if atom.get_id() == 'CA']
+    atoms_one = [atom for atom in struct.get_atoms() if atom.get_id() == 'CA']
+    atoms_two = [atom for atom in chain.get_atoms() if atom.get_id() == 'CA']
     ns = pdb.NeighborSearch(atoms_one)
     clashes = 0
     for atom_two in atoms_two:
@@ -158,147 +282,10 @@ def are_clashing(chain_one, chain_two, max_clashes=150, contact_distance=1.5):
     return False
 
 
-
-def complex_differ(structure_one, structure_two):
-    chains_one_len = len(get_chain_ids_from_structure(structure_one))
-    chains_two_len = len(get_chain_ids_from_structure(structure_two))
-    if chains_one_len != chains_two_len:
-        return True
-    return False
-
-
-def get_chains_from_structure(structure, remove_het=False):
+def superimpose_chains(chain_one_real, chain_two_real):
     """
-    Creates a list of chains out of a given structure.
-    If remove_het is set to true, the heteroatoms are removed from the chain.
-    Returns the list of chains.
-    """
-    chains = []
-    for model in structure:
-        for chain in model:
-            if not remove_het:
-                chains.append(chain)
-            else:
-                heteroatoms = list(filter(lambda x: x.id[0] != " ",
-                                          chain.get_residues()))
-                for heteroatom in heteroatoms:
-                    chain.detach_child(heteroatom.id)
-                chains.append(chain)
-    return chains
-
-
-def get_chain_permissive(structure, chain_id):
-    """
-    Extract a specific chain from a structure given a specified chain id.
-    Returns a chain object.
-    """
-    for chain in get_chains_from_structure(structure):
-        if chain.id == chain_id:
-            return chain
-        elif chain_id in chain.id:
-            return chain
-
-
-def get_chain(structure, chain_id):
-    """
-    Extract a specific chain from a structure given a specified chain id.
-    Returns a chain object.
-    """
-    for chain in get_chains_from_structure(structure):
-        if chain.id == chain_id:
-            return chain
-
-
-def get_chain_ids_from_structure(structure):
-    chains_ids = []
-    for model in structure:
-        for c in model:
-            chains_ids.append(c.id)
-    return chains_ids
-
-
-
-
-def add_chain(structure, chain_real):
-    chain = copy.deepcopy(chain_real)
-    chains_ids = get_chain_ids_from_structure(structure)
-    while chain.id in chains_ids:
-        chain.id = chain.id+"-"+chain.id
-    structure[0].add(chain)
-
-def modify_ids_first_pair(structure, mapping_chain_ids, used_pairs):
-    chains = get_chains_in_complex(structure)
-    print("asdasdas")
-    print(chains[0].id)
-    print(chains[1].id)
-    mapping_chain_ids[chains[0].id] = 'A'
-    mapping_chain_ids[chains[1].id] = 'B'
-    chains[0].id = 'A'
-    chains[1].id = 'B'
-    used_pairs.append(())
-
-def add_chain_to_structure(complex, chain_real, possible_ids, mapping_chain_ids):
-    chain = copy.deepcopy(chain_real)
-    id_to_assign = possible_ids.pop(0)
-    print("Assigning id " + str(id_to_assign) + " to " +  str(chain.id))
-    mapping_chain_ids[chain.id] = id_to_assign
-    chain.id = id_to_assign
-    complex[0].add(chain)
-
-
-def select_pair_to_superimpose(similar_chain_id, ps, structures):
-    structure_id = ps[similar_chain_id]
-    structure_to_superimpose = structures[structure_id]
-    other = [tuple_id for tuple_id in structure_id if tuple_id != similar_chain_id][0]
-    if main.options.verbose:
-        msg.trying_superimpose(other, structure_id)
-    return (structure_to_superimpose,other)
-
-
-def get_possible_structures(chain_in_current_complex, similar_chains,
-                            structures, used_pairs, clashing):
-    #id_new = new_chain.id.split("-")[0]
-    possible_structures = {}
-    if chain_in_current_complex in similar_chains:
-        for sim_chain in similar_chains[chain_in_current_complex]:
-            for tuple_key in structures:
-                if sim_chain in tuple_key:
-                    print(tuple_key)
-                    print(used_pairs)
-                    if tuple_key not in used_pairs :
-                        if tuple_key not in clashing:
-                            possible_structures[sim_chain] = (tuple_key)
-
-    return possible_structures
-
-
-def get_chains_in_complex(used_pairs):
-    """
-    Extracts the names of the chains given a list of tuples containing the
-    chains' names.
-    Returns a list of chain ids.
-    """
-    chains = []
-    for pair_in_current_complex in used_pairs:
-        for chain_in_current_complex in pair_in_current_complex:
-            chains.append(chain_in_current_complex)
-    return chains
-
-
-def remove_chain(structure, chain_id):
-    """
-    removes a chain from a structure.
-    Returns the new structure.
-    """
-    for model in structure:
-        model.detach_child(chain_id)
-    return structure
-
-
-def superimpose_chains_test(chain_one_real, chain_two_real):
-    """
-    Superimposes two structures and returns the superimposed structure and the
-    RMSD of the superimposition.
+    Superimposes two structuresor chains and returns the superimposer object.
+    This will be applied to the chains that need to be rotated.
     """
     chain_one = copy.deepcopy(chain_one_real)
     chain_two = copy.deepcopy(chain_two_real)
@@ -313,66 +300,49 @@ def superimpose_chains_test(chain_one_real, chain_two_real):
     return super_imposer
 
 
-def print_chain_in_structure(structure):
+def get_possible_structures(chain_in_current_complex, similar_chains,
+                            structures, used_pairs, clashing):
     """
-    Prints all chains of a given structure in a human-readable way.
-    Method used in development.
+    Selects the structures that have a possibility to be added to the current
+    complex given informations about similarity of the chains and previous
+    attempts.
     """
-    if structure is not None:
-        for chain in get_chains_from_structure(structure):
-            print("Chain id: " + str(chain.id) + " --> " + str(chain))
+    possible_structures = {}
+    if chain_in_current_complex in similar_chains:
+        for sim_chain in similar_chains[chain_in_current_complex]:
+            for tuple_key in structures:
+                if sim_chain in tuple_key:
+                    print(tuple_key)
+                    print(used_pairs)
+                    if tuple_key not in used_pairs:
+                        if tuple_key not in clashing:
+                            possible_structures[sim_chain] = (tuple_key)
+    return possible_structures
 
 
-def superimpose_chains(chain_one_real, chain_two_real):
+def complex_is_ready(complex, stoichiometry):
     """
-    Superimposes two structures and returns the superimposed structure and the
-    RMSD of the superimposition.
+    Checks if the number of chains in the complex is the same as the maximum
+    number of chains desired.
     """
-    chain_one = copy.deepcopy(chain_one_real)
-    chain_two = copy.deepcopy(chain_two_real)
-    super_imposer = pdb.Superimposer()
-    atoms_one = sorted(list(chain_one.get_atoms()))
-    atoms_two = sorted(list(chain_two.get_atoms()))
-    # Fix lengths so that they are the same
-    min_len = min(len(atoms_one), len(atoms_two))
-    atoms_one = atoms_one[:min_len]
-    atoms_two = atoms_two[:min_len]
-    super_imposer.set_atoms(atoms_one, atoms_two)
-    super_imposer.apply(list(chain_two.get_atoms()))
-    return (chain_two, super_imposer.rms)
+    if len(get_chains_from_structure(complex)) == sum(stoichiometry.values()):
+        return True
+    else:
+        return False
 
 
-def superimpose(structure_one_real, structure_two_real):
-    """
-    Superimposes two structures and returns the superimposed structure and the
-    rmsd of the superimposition.
-    """
-    structure_one = copy.deepcopy(structure_one_real)
-    structure_two = copy.deepcopy(structure_two_real)
-    super_imposer = pdb.Superimposer()
-    atoms_one = list(structure_one.get_atoms())
-    atoms_two = list(structure_two.get_atoms())
-    # Fix lengths so that they are the same
-    min_len = min(len(atoms_one), len(atoms_two))
-    atoms_one = atoms_one[:min_len]
-    atoms_two = atoms_two[:min_len]
-    super_imposer.set_atoms(atoms_one, atoms_two)
-    super_imposer.apply(list(structure_two[0].get_atoms()))
-    return (structure_two, super_imposer.rms)
-
-# REMOVE ?
-# def stoichiometry_is_not_ended(stoichiometry, current_chains_in_complex):
-#     """
-#     This function looks if it is possible to construct a complex with the
-#     files and the stoichiometry given by the user.
-#     """
-#     number_real_chains = sum(stoichiometry.values())
-#     if current_chains_in_complex < number_real_chains:
-#         return True
-#     else:
-#         return False
+#?????
+def complex_differ(structure_one, structure_two):
+    chains_one_len = len(get_chain_ids_from_structure(structure_one))
+    chains_two_len = len(get_chain_ids_from_structure(structure_two))
+    if chains_one_len != chains_two_len:
+        return True
+    return False
 
 
+# ----------------------------
+# Writing and showing outputs
+# ----------------------------
 def write_structure_into_file(structure, name, format):
     """
     Writes the strcuture into a file. The file can be either a pdb or a mmcif.
@@ -387,73 +357,6 @@ def write_structure_into_file(structure, name, format):
     io.save(name)
 
 
-def complex_fits_stoich(complex, stoichiometry):
-    if len(get_chains_from_structure(complex)) == sum(stoichiometry.values()):
-        return True
-    else:
-        return False
-
-
-def get_information(input_files, options):
-    """
-    Gets the possible structures for the macrocomplex construction.
-
-    It gets each pair of chains from each file, constructing a chain ID. Once
-    completed, the following structures are created:
-
-    - A dictionary with the ID as key and the chain as value.
-    - A list with sublists that contain IDs by pairs.
-
-    After that, similar chains are gotten from the dictionary, generating a
-    dictionary with key: ID and values: similar chains' IDs.
-
-    At the end, the unneeded chains are removed.
-    """
-    chains = {}
-    pairs = []
-    structures = {}
-    chain_index = 1
-    for file in input_files:
-        paired_chains = []
-        structure = get_structure(file, remove_het=True)
-        for chain in get_chains_from_structure(structure, remove_het=True):
-            chain_id = str(chain_index)+"_"+str(chain.id)
-            chains[chain_id] = chain
-            chain.id = chain_id
-            paired_chains.append(chain_id)
-        pairs.append(paired_chains)
-        structures[tuple(paired_chains)] = structure
-        chain_index += 1
-    similar_chains = get_similar_chains(chains)
-    (chains, similar_chains, pairs) = remove_useless_chains(chains,
-                                                            similar_chains,
-                                                            pairs)
-
-    # Save everything to binary files to be able to resume.
-    if not os.path.exists('resume'):
-        os.makedirs('resume')
-    prefix = 'resume/' + options.input.split('/')[-1]
-    chains_backup = open(prefix + "_chains.p", "wb")
-    pairs_backup = open(prefix + "_pairs.p", "wb")
-    similar_chains_backup = open(prefix + "_similar_chains.p", "wb")
-    structures_backup = open(prefix + "_structures.p", "wb")
-    pickle.dump(chains, chains_backup)
-    pickle.dump(pairs, pairs_backup)
-    pickle.dump(similar_chains, similar_chains_backup)
-    pickle.dump(structures, structures_backup)
-
-    if options.verbose:
-        sys.stderr.write("The analysis of the input results in:\n")
-        sys.stderr.write("\tChains: %s\n" % len(chains))
-        sys.stderr.write("\tPaired chains: %s\n" % len(pairs))
-        sys.stderr.write("\tSimilar Chains: %s\n" % len(similar_chains))
-        sys.stderr.write("\tStructures: %s\n\n" % len(structures))
-        sys.stderr.write("Resume files have been saved in %s/resume\n"
-                         % os.getcwd())
-
-    return (chains, pairs, similar_chains, structures)
-
-
 def open_in_chimera(directory, options):
     """
     Opens all the models in Chimera if the user specified it. Works with Linux
@@ -464,6 +367,17 @@ def open_in_chimera(directory, options):
             if options.verbose:
                 sys.stderr.write('Opening model %s in Chimera' % file)
             if sys.platform == 'darwin':
-                os.system('/Applications/Chimera.app/Contents/MacOS/chimera' + file)
+                os.system('/Applications/Chimera.app/Contents/MacOS/chimera'
+                          + file)
             else:
                 os.system('chimera' + file)
+
+
+def print_chain_in_structure(structure):
+    """
+    Prints all chains of a given structure in a human-readable way.
+    Method used in development.
+    """
+    if structure is not None:
+        for chain in get_chains_from_structure(structure):
+            print("Chain id: " + str(chain.id) + " --> " + str(chain))
