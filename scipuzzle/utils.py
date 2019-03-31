@@ -362,8 +362,8 @@ def open_in_chimera(directory, options):
     Opens all the models in Chimera if the user specified it. Works with Linux
     and macOS.
     """
-    for file in os.listdir(directory):
-        if file.endswith('.pdb'):
+    for file in os.listdir(os.getcwd()+'/results'):
+        if file.endswith('.cif'):
             if options.verbose:
                 sys.stderr.write('Opening model %s in Chimera' % file)
             if sys.platform == 'darwin':

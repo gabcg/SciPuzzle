@@ -22,8 +22,8 @@ def read_args():
                         help="Input directory containing PDB formatted files")
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
-                        default=None,
-                        help="PDB formatted outputfile")
+                        default='model',
+                        help="Ouput name")
     parser.add_argument('-s', '--stoichiometry', dest="stoichiometry",
                         action="store",
                         default=None,
