@@ -65,18 +65,23 @@ def get_similar_chains(chains, sequence_identity_threshold=0.95):
     Specifically the dictionary has as keys all chain ids and as values all the
     chains that are similar to the key chain.
     """
-    print("Testing get similar chains")
+
     similar_chains = {}
+    if main.options.verbose:
+        sys.stderr.write("\nComputing similar chains ... \n")
     for chain_1, chain_2 in itertools.combinations(chains, 2):
-        print("Chain one : " + str(chain_1))
-        print("Chain two : " + str(chain_2))
         alignments = pairwise2.align.globalxx(chain_to_fasta(chains[chain_1]),
                                               chain_to_fasta(chains[chain_2]))
         pairwise_sequence_identity = alignments[0][2]/len(alignments[0][0])
         if pairwise_sequence_identity >= sequence_identity_threshold:
+<<<<<<< HEAD
             (superimposed, rmsd) = superimpose_chains(chains[chain_1],
                                                       chains[chain_2])
             print(rmsd)
+=======
+            (superimposed, rmsd) = superimpose_chains(chains[chain_1], chains[chain_2])
+
+>>>>>>> origin/adding-pairs
             if rmsd < 0.05:
                 if chain_1 not in similar_chains:
                     similar_chains[chain_1] = []
@@ -115,7 +120,11 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
+<<<<<<< HEAD
 def are_clashing(structure, chain, max_clashes=50, contact_distance=1.0):
+=======
+def are_clashing(chain_one, chain_two, max_clashes=100, contact_distance=1.0):
+>>>>>>> origin/adding-pairs
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance.
@@ -128,14 +137,23 @@ def are_clashing(structure, chain, max_clashes=50, contact_distance=1.0):
     for atom_two in atoms_two:
         for atom in ns.search(atom_two.get_coord(), contact_distance, 'A'):
             clashes += 1
-            if main.options.verbose:
-                sys.stderr.write("Clash Found!\n")
             if clashes == max_clashes:
+                if main.options.verbose:
+                    sys.stderr.write("Clash Found!\n")
                 return True
     return False
 
 
+<<<<<<< HEAD
 def get_chain_from_structure(structure, remove_het=False):
+=======
+def get_chains_from_structure(structure, remove_het = False):
+    """
+    Creates a list of chains out of a given structure.
+    If remove_het is set to true, the heteroatoms are removed from the chain.
+    Returns the list of chains.
+    """
+>>>>>>> origin/adding-pairs
     chains = []
     for model in structure:
         for chain in model:
@@ -150,26 +168,102 @@ def get_chain_from_structure(structure, remove_het=False):
     return chains
 
 
-def get_chain(structure, chain_id):
-    for model in structure:
-        for chain in model:
-            if chain.id == chain_id:
-                return chain
+<<<<<<< HEAD
+=======
+def get_chain_permissive(structure, chain_id):
+    """
+    Extract a specific chain from a structure given a specified chain id.
+    Returns a chain object.
+    """
+    for chain in get_chains_from_structure(structure):
+        if chain.id == chain_id:
+            return chain
+        elif chain_id in chain.id:
+            return chain
 
+
+>>>>>>> origin/adding-pairs
+def get_chain(structure, chain_id):
+    """
+    Extract a specific chain from a structure given a specified chain id.
+    Returns a chain object.
+    """
+    for chain in get_chains_from_structure(structure):
+        if chain.id == chain_id:
+            return chain
+
+
+def get_chain_ids_from_structure(structure):
+    chains_ids = []
+    for model in structure:
+        for c in model:
+            chains_ids.append(c.id)
+    return chains_ids
+
+
+<<<<<<< HEAD
 
 def get_possible_structures(chain_in_current_complex, similar_chains,
                             structures, used_pairs):
+=======
+def complexes_are_equal(structure1, structure2):
+    chain_ids_one = get_chain_ids_from_structure(structure1)
+    chain_ids_two = get_chain_ids_from_structure(structure2)
+
+
+
+
+def add_chain(structure, chain_real):
+    chain = copy.deepcopy(chain_real)
+    chains_ids = get_chain_ids_from_structure(structure)
+    while chain.id in chains_ids:
+        chain.id = chain.id+"-"+chain.id
+    structure[0].add(chain)
+
+def modify_ids_first_pair(structure, mapping_chain_ids, used_pairs):
+    chains = get_chains_in_complex(structure)
+    print("asdasdas")
+    print(chains[0].id)
+    print(chains[1].id)
+    mapping_chain_ids[chains[0].id] = 'A'
+    mapping_chain_ids[chains[1].id] = 'B'
+    chains[0].id = 'A'
+    chains[1].id = 'B'
+    used_pairs.append(())
+
+
+
+def add_chain_to_structure(complex, chain_real, possible_ids, mapping_chain_ids):
+    chain = copy.deepcopy(chain_real)
+    id_to_assign = possible_ids.pop(0)
+    print("Assigning id " + str(id_to_assign) + " to " +  str(chain.id))
+    mapping_chain_ids[chain.id] = id_to_assign
+    chain.id = id_to_assign
+    complex[0].add(chain)
+
+def get_possible_structures(chain_in_current_complex, similar_chains,
+                            structures, used_pairs, clashing, new_chain):
+    #id_new = new_chain.id.split("-")[0]
+>>>>>>> origin/adding-pairs
     possible_structures = {}
     if chain_in_current_complex in similar_chains:
         for sim_chain in similar_chains[chain_in_current_complex]:
             for tuple_key in structures:
                 if sim_chain in tuple_key:
-                    if tuple_key not in used_pairs:
-                        possible_structures[sim_chain] = (tuple_key)
+                    print(tuple_key)
+                    print(used_pairs)
+                    if tuple_key not in used_pairs :
+                        if tuple_key not in clashing:
+                            possible_structures[sim_chain] = (tuple_key)
     return possible_structures
 
 
 def get_chains_in_complex(used_pairs):
+    """
+    Extracts the names of the chains given a list of tuples containing the
+    chains' names.
+    Returns a list of chain ids.
+    """
     chains = []
     for pair_in_current_complex in used_pairs:
         for chain_in_current_complex in pair_in_current_complex:
@@ -178,6 +272,10 @@ def get_chains_in_complex(used_pairs):
 
 
 def remove_chain(structure, chain_id):
+    """
+    removes a chain from a structure.
+    Returns the new structure.
+    """
     for model in structure:
         model.detach_child(chain_id)
     return structure
@@ -202,8 +300,12 @@ def superimpose_chains_test(chain_one_real, chain_two_real):
 
 
 def print_chain_in_structure(structure):
+    """
+    Prints all chains of a given structure in a human-readable way.
+    Method used in development.
+    """
     if structure is not None:
-        for chain in get_chain_from_structure(structure):
+        for chain in get_chains_from_structure(structure):
             print("Chain id: " + str(chain.id) + " --> " + str(chain))
 
 
@@ -244,6 +346,7 @@ def superimpose(structure_one_real, structure_two_real):
     super_imposer.apply(list(structure_two[0].get_atoms()))
     return (structure_two, super_imposer.rms)
 
+<<<<<<< HEAD
 
 def superimpose_old(chain_one, chain_two):
     """
@@ -260,46 +363,37 @@ def superimpose_old(chain_one, chain_two):
     super_imposer.set_atoms(atoms_one, atoms_two)
     super_imposer.apply(chain_two.get_atoms())
     return (chain_two, super_imposer.rms)
+=======
+# REMOVE ?
+# def stoichiometry_is_not_ended(stoichiometry, current_chains_in_complex):
+#     """
+#     This function looks if it is possible to construct a complex with the
+#     files and the stoichiometry given by the user.
+#     """
+#     number_real_chains = sum(stoichiometry.values())
+#     if current_chains_in_complex < number_real_chains:
+#         return True
+#     else:
+#         return False
+>>>>>>> origin/adding-pairs
 
 
-def stoichiometry_is_not_ended(stoichiometry, current_chains_in_complex):
+def write_structure_into_file(structure, name, format):
     """
-    This function looks if it is possible to construct a complex with the
-    files and the stoichiometry given by the user.
+    Writes the strcuture into a file. The file can be either a pdb or a mmcif.
+    Format needs to be either "pdb" or "mmcif" depending on the desired output
+    file.
     """
-    number_real_chains = sum(stoichiometry.values())
-    if current_chains_in_complex < number_real_chains:
-        return True
-    else:
-        return False
-
-
-def write_structure_into_mmcif(structure, name):
-    io = pdb.MMCIFIO()
+    if format == "pdb":
+        io = pdb.PDBIO()
+    elif format == "mmcif":
+        io = pdb.MMCIFIO()
     io.set_structure(structure)
-    io.save(name)
-
-
-def write_structure_into_pdb(structure, name):
-    io = pdb.PDBIO()
-    io.set_structure(structure)
-    io.save(name)
-
-
-def write_structure_into_pdb_old(chains, name):
-    io = pdb.PDBIO()
-    s = pdb.Structure.Structure('test')
-    i = 1
-    for chain in chains:
-        s.add(pdb.Model.Model(i))
-        s[i].add(chain)
-        i += 1
-    io.set_structure(s)
     io.save(name)
 
 
 def complex_fits_stoich(complex, stoichiometry):
-    if len(get_chain_from_structure(complex)) == sum(stoichiometry.values()):
+    if len(get_chains_from_structure(complex)) == sum(stoichiometry.values()):
         return True
     else:
         return False

@@ -14,8 +14,7 @@ def read_args():
     parser.add_argument('-i', '--input', dest="input",
                         action="store",
                         default=None,
-                        help="Input Folder containing PDB formatted files",
-                        required=True)
+                        help="Input Folder containing PDB formatted files")
     parser.add_argument('-o', '--output', dest="output",
                         action="store",
                         default="reconstructed_macrocomplex.pdb",
