@@ -14,7 +14,10 @@ if options.gui:
     options = interface.gui()
 
 files = arguments.get_input_files(options.input)
-nc = options.nc
+nc = None
+if options.nc is not None:
+    nc = int(options.nc)
+
 if options.verbose:
     utils.options = options
     msg.write_welcoming(files)
@@ -59,6 +62,8 @@ def construct_complex(current_complex_real, similar_chains, nc,
             ps = utils.get_possible_structures(chain_in_cc,
                                                similar_chains, structures,
                                                used_pairs, clashing)
+            global complexes_found
+
             # Saves the current complex if it reached the max number of chains
             if len(ps) == 0 and options.nc is None:
                 if options.verbose:

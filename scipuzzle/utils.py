@@ -250,7 +250,7 @@ def remove_useless_chains(chains, similar_chains, pairs):
     return (chains, similar_chains, pairs)
 
 
-def are_clashing(struct, chain, max_clashes=50, contact_distance=1.0):
+def are_clashing(struct, chain, max_clashes=30, contact_distance=2.0):
     """
     Compares the CA atoms of two chains and checks for clashes according to the
     contact distance and a maximum number of clashes.
